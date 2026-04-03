@@ -66,7 +66,7 @@ footer{text-align:center;padding:40px 24px;font-size:11px;color:var(--text-3)}
 <body>
 <nav><div class="inner">
 <a class="logo" onclick="goStep(0)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#f5f5f7" stroke-width="1.5"/><path d="M8 12l3 3 5-6" stroke="#f5f5f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Click2Trade</span></a>
-<div class="links"><a>How It Works</a><a>Pricing</a><a>Support</a></div>
+<div class="links"><a onclick="goStep(7)">How It Works</a><a>Pricing</a><a>Support</a></div>
 </div></nav>
 
 <main>
@@ -131,6 +131,118 @@ footer{text-align:center;padding:40px 24px;font-size:11px;color:var(--text-3)}
 <div id="final-list" class="card-stack"></div>
 <div id="final-summary" class="stat-grid" style="grid-template-columns:1fr 1fr;margin-top:32px"></div>
 </div></div>
+<!-- STEP 7: HOW IT WORKS -->
+<div id="step7" class="step"><div style="max-width:800px;margin:0 auto;padding:80px 0 60px">
+<div style="text-align:center;margin-bottom:96px;animation:fadeUp .8s ease">
+<div style="display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:980px;padding:6px 16px;font-size:12px;color:var(--text-3);margin-bottom:24px">How It Works</div>
+<h1 style="font-size:clamp(36px,5vw,56px);font-weight:700;letter-spacing:-2.5px;line-height:1.05;margin-bottom:20px;background:linear-gradient(180deg,#f5f5f7,#86868b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">The fastest way to<br>sell your car.</h1>
+<p style="font-size:clamp(15px,1.8vw,19px);color:var(--text-3);max-width:520px;margin:0 auto;line-height:1.6">No phone calls. No tyre-kickers. No driving to six dealerships on a Saturday. Our AI handles everything.</p>
+</div>
+<div style="position:relative;padding-left:48px">
+<div style="position:absolute;left:15px;top:8px;bottom:80px;width:1px;background:linear-gradient(180deg,var(--blue),var(--green),var(--orange),var(--green));opacity:0.3"></div>
+
+<div style="position:relative;margin-bottom:80px;animation:fadeUp .8s ease .1s both">
+<div style="position:absolute;left:-48px;top:0;width:30px;height:30px;border-radius:10px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff">1</div>
+<div style="font-size:11px;color:var(--blue);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">30 Seconds</div>
+<h2 style="font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:12px">Enter your car details</h2>
+<p style="font-size:15px;color:var(--text-3);line-height:1.65;margin-bottom:20px">Year, make, model, odometer, and condition. That's it. No account needed, no personal details required upfront.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:14px;overflow:hidden">
+<div style="background:var(--card);padding:16px 18px"><div style="font-size:11px;color:var(--text-3);margin-bottom:4px">Example</div><div style="font-size:14px;font-weight:500">2022 Toyota RAV4</div></div>
+<div style="background:var(--card);padding:16px 18px"><div style="font-size:11px;color:var(--text-3);margin-bottom:4px">Odometer</div><div style="font-size:14px;font-weight:500">45,000 km</div></div>
+<div style="background:var(--card);padding:16px 18px"><div style="font-size:11px;color:var(--text-3);margin-bottom:4px">Condition</div><div style="font-size:14px;font-weight:500">Good</div></div>
+</div></div>
+
+<div style="position:relative;margin-bottom:80px;animation:fadeUp .8s ease .2s both">
+<div style="position:absolute;left:-48px;top:0;width:30px;height:30px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff">2</div>
+<div style="font-size:11px;color:var(--green);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Instant</div>
+<h2 style="font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:12px">Get an AI-powered valuation</h2>
+<p style="font-size:15px;color:var(--text-3);line-height:1.65;margin-bottom:20px">Our model analyses millions of real transactions, current listings, and market trends to price your car accurately. You'll see a low, market, and high estimate — so you know exactly where you stand before a single dealer gets involved.</p>
+<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+<div><div style="font-size:11px;color:var(--text-3);margin-bottom:4px">Low</div><div style="font-size:20px;font-weight:600;color:var(--text-3)">$38,200</div></div>
+<div><div style="font-size:11px;color:var(--green);margin-bottom:4px">Market Value</div><div style="font-size:28px;font-weight:700">$42,400</div></div>
+<div><div style="font-size:11px;color:var(--text-3);margin-bottom:4px">High</div><div style="font-size:20px;font-weight:600;color:var(--green)">$47,500</div></div>
+</div></div>
+
+<div style="position:relative;margin-bottom:80px;animation:fadeUp .8s ease .3s both">
+<div style="position:absolute;left:-48px;top:0;width:30px;height:30px;border-radius:10px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff">3</div>
+<div style="font-size:11px;color:var(--orange);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">1 – 4 Hours</div>
+<h2 style="font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:12px">Dealers compete for your car</h2>
+<p style="font-size:15px;color:var(--text-3);line-height:1.65;margin-bottom:20px">Hit "Find Buyers" and our AI agent goes to work. It contacts 10–15 dealerships and brokers near you simultaneously — sharing your vehicle details anonymously. No name, no phone number, no address. Just the car specs. Dealers who want it submit real offers.</p>
+<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+<div style="padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
+<div style="width:32px;height:32px;border-radius:8px;background:#0071e315;color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">P</div>
+<div style="flex:1"><div style="font-size:13px;font-weight:500">Dealership &middot; 3.2 km &middot; &#9733; 4.8</div></div>
+<div style="font-size:15px;font-weight:600">$43,100</div></div>
+<div style="padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
+<div style="width:32px;height:32px;border-radius:8px;background:#34c75915;color:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">E</div>
+<div style="flex:1"><div style="font-size:13px;font-weight:500">Broker &middot; 5.1 km &middot; &#9733; 4.9</div></div>
+<div style="font-size:15px;font-weight:600">$44,800</div></div>
+<div style="padding:16px 20px;display:flex;align-items:center;gap:12px">
+<div style="width:32px;height:32px;border-radius:8px;background:#ff9f0a15;color:var(--orange);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">N</div>
+<div style="flex:1"><div style="font-size:13px;font-weight:500">Dealership &middot; 11 km &middot; &#9733; 4.6</div></div>
+<div style="font-size:15px;font-weight:600">$41,200</div></div>
+</div>
+<div style="margin-top:12px;font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#6e6e73" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#6e6e73" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Your identity stays hidden until you accept an offer</div>
+</div>
+
+<div style="position:relative;margin-bottom:80px;animation:fadeUp .8s ease .4s both">
+<div style="position:absolute;left:-48px;top:0;width:30px;height:30px;border-radius:10px;background:#af52de;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff">4</div>
+<div style="font-size:11px;color:#af52de;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">One Tap</div>
+<h2 style="font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:12px">AI negotiates your best deal</h2>
+<p style="font-size:15px;color:var(--text-3);line-height:1.65;margin-bottom:20px">This is where Click2Trade is different. Instead of just showing you offers and leaving you to pick, our AI agent goes back to every dealer with counter-offers — using competing bids as leverage. It plays them against each other to extract the maximum price. Like having a professional car broker working for you, for free.</p>
+<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+<div style="font-size:13px;font-weight:500">Before negotiation</div>
+<div style="font-size:18px;font-weight:600;color:var(--text-3)">$44,800</div></div>
+<div style="height:1px;background:var(--border);margin-bottom:14px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div style="font-size:13px;font-weight:500">After AI negotiation</div>
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px;font-weight:700;color:var(--green)">$46,200</span><span style="font-size:12px;color:var(--green);font-weight:500;background:rgba(48,209,88,.1);padding:2px 8px;border-radius:4px">+$1,400</span></div>
+</div></div></div>
+
+<div style="position:relative;animation:fadeUp .8s ease .5s both">
+<div style="position:absolute;left:-48px;top:0;width:30px;height:30px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff">&#10003;</div>
+<div style="font-size:11px;color:var(--green);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Done</div>
+<h2 style="font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:12px">Accept, schedule, get paid</h2>
+<p style="font-size:15px;color:var(--text-3);line-height:1.65">Review all final offers ranked by price. Accept the one you want. The winning dealer contacts you to arrange pickup (usually free) and payment. Most sellers go from first click to cash in under 24 hours.</p>
+</div>
+</div>
+
+<!-- Comparison Table -->
+<div style="margin-top:96px;margin-bottom:80px;animation:fadeUp .8s ease .6s both">
+<h2 style="font-size:28px;font-weight:700;letter-spacing:-1px;text-align:center;margin-bottom:8px">Click2Trade vs. the alternatives</h2>
+<p style="font-size:14px;color:var(--text-3);text-align:center;margin-bottom:32px">There's a reason 94% of sellers accept an offer.</p>
+<div style="overflow-x:auto;border-radius:16px;border:1px solid var(--border)">
+<table style="width:100%;border-collapse:collapse;font-size:13px;min-width:500px">
+<thead><tr style="background:var(--card)">
+<th style="padding:14px 18px;text-align:left;font-weight:500;color:var(--text-3);border-bottom:1px solid var(--border)"></th>
+<th style="padding:14px 18px;text-align:center;font-weight:600;color:var(--blue);border-bottom:1px solid var(--border)">Click2Trade</th>
+<th style="padding:14px 18px;text-align:center;font-weight:500;color:var(--text-3);border-bottom:1px solid var(--border)">Private Sale</th>
+<th style="padding:14px 18px;text-align:center;font-weight:500;color:var(--text-3);border-bottom:1px solid var(--border)">Dealer Trade-in</th>
+</tr></thead>
+<tbody>
+<tr style="background:var(--surface)"><td style="padding:12px 18px;border-bottom:1px solid var(--border);color:var(--text-2)">Time to sell</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--green);font-weight:500">&lt; 24 hours</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-3)">2–6 weeks</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-3)">Same day</td></tr>
+<tr style="background:var(--card)"><td style="padding:12px 18px;border-bottom:1px solid var(--border);color:var(--text-2)">Price achieved</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--green);font-weight:500">Highest trade</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-3)">Highest (if lucky)</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--red)">Below market</td></tr>
+<tr style="background:var(--surface)"><td style="padding:12px 18px;border-bottom:1px solid var(--border);color:var(--text-2)">Effort required</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--green);font-weight:500">None</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--red)">High</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-3)">Low</td></tr>
+<tr style="background:var(--card)"><td style="padding:12px 18px;border-bottom:1px solid var(--border);color:var(--text-2)">Buyers competing</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--green);font-weight:500">10–15</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-3)">1 at a time</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-3)">1</td></tr>
+<tr style="background:var(--surface)"><td style="padding:12px 18px;border-bottom:1px solid var(--border);color:var(--text-2)">AI negotiation</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--green);font-weight:500">&#10003;</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-3)">&#10007;</td><td style="padding:12px 18px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-3)">&#10007;</td></tr>
+<tr style="background:var(--card)"><td style="padding:12px 18px;color:var(--text-2)">Strangers at your door</td><td style="padding:12px 18px;text-align:center;color:var(--green);font-weight:500">Never</td><td style="padding:12px 18px;text-align:center;color:var(--red)">Yes</td><td style="padding:12px 18px;text-align:center;color:var(--text-3)">No</td></tr>
+</tbody></table></div></div>
+
+<!-- FAQ -->
+<div style="margin-bottom:80px;animation:fadeUp .8s ease .7s both">
+<h2 style="font-size:28px;font-weight:700;letter-spacing:-1px;text-align:center;margin-bottom:32px">Common questions</h2>
+<div id="faq-list" style="display:flex;flex-direction:column;gap:1px;background:var(--border);border-radius:16px;overflow:hidden"></div>
+</div>
+
+<!-- CTA -->
+<div style="text-align:center;padding:60px 0;animation:fadeUp .8s ease .8s both">
+<h2 style="font-size:32px;font-weight:700;letter-spacing:-1.2px;margin-bottom:12px">Ready to skip the runaround?</h2>
+<p style="font-size:15px;color:var(--text-3);margin-bottom:32px">Get your free AI valuation in 30 seconds.</p>
+<button class="btn-primary" onclick="goStep(1)">Get Started</button>
+</div>
+</div></div>
+
 </main>
 <footer id="footer" style="display:none">&copy; 2026 Click2Trade, Inc.</footer>
 
@@ -206,10 +318,11 @@ function setLocale(code){
 function goStep(n){
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
   document.getElementById('step'+n).classList.add('active');
-  document.getElementById('footer').style.display=n>0?'block':'none';
+  document.getElementById('footer').style.display=(n>0)?'block':'none';
   currentStep=n;
   window.scrollTo({top:0,behavior:'smooth'});
   if(n===1)buildForm();
+  if(n===7)buildFAQ();
 }
 
 function buildLanding(){
@@ -358,6 +471,32 @@ function renderFinal(){
     ["Best Final Offer",fmt(NEG[0].offer),"var(--green)"],
     ["Negotiation Gain","+"+fmt(gain),"var(--orange)"]
   ].map(function(a){return'<div class="stat"><div class="stat-label">'+a[0]+'</div><div class="stat-value" style="color:'+a[2]+'">'+a[1]+'</div></div>';}).join('');
+}
+
+function buildFAQ(){
+  var faqs=[
+    ["What does Click2Trade cost?","It's free for sellers. We charge a small success fee to the dealer when a sale is completed. If no deal is made, you pay nothing."],
+    ["How do you value my car?","We use real-time market data from millions of listings and recent sales across Australia. Our AI model factors in make, model, year, kilometres, condition, and your location to produce an accurate range."],
+    ["Which dealers see my car?","Licensed dealerships and brokers in your area. We vet every buyer in our network. Your personal details (name, phone, address) are never shared until you accept an offer."],
+    ["How does AI negotiation work?","Once initial offers are in, our AI agent contacts each dealer with counter-offers, using competing bids as leverage. It runs multiple rounds automatically to push every offer higher before presenting you with final numbers."],
+    ["Can I sell a car with finance owing?","Yes. If you have an outstanding loan, we coordinate with the buyer and your finance company to settle the payout as part of the transaction."],
+    ["Do I need a roadworthy certificate?","In most cases, no. Our dealer buyers handle reconditioning and compliance post-purchase. Requirements may vary by state."],
+    ["How quickly can I get paid?","Most sellers receive payment within 24–48 hours of accepting an offer. The winning dealer arranges free pickup at a time that suits you."],
+    ["What if I don't like any of the offers?","No obligation at all. If the offers don't meet your expectations, you walk away and pay nothing. You can also relist later as market conditions change."]
+  ];
+  var el=document.getElementById('faq-list');
+  if(!el)return;
+  el.innerHTML=faqs.map(function(f,i){
+    return '<div style="background:var(--card);padding:0"><div onclick="toggleFaq('+i+')" style="padding:18px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:500">'+f[0]+'</span><span id="faq-icon-'+i+'" style="font-size:18px;color:var(--text-3);transition:transform .3s;display:inline-block">+</span></div><div id="faq-body-'+i+'" style="display:none;padding:0 20px 18px"><p style="font-size:14px;color:var(--text-3);line-height:1.65">'+f[1]+'</p></div></div>';
+  }).join('');
+}
+var openFaq=null;
+function toggleFaq(i){
+  if(openFaq!==null&&openFaq!==i){document.getElementById('faq-body-'+openFaq).style.display='none';document.getElementById('faq-icon-'+openFaq).style.transform='rotate(0deg)';document.getElementById('faq-icon-'+openFaq).textContent='+';}
+  var body=document.getElementById('faq-body-'+i);
+  var icon=document.getElementById('faq-icon-'+i);
+  if(openFaq===i){body.style.display='none';icon.style.transform='rotate(0deg)';icon.textContent='+';openFaq=null;}
+  else{body.style.display='block';icon.style.transform='rotate(45deg)';icon.textContent='+';openFaq=i;}
 }
 </script>
 </body>
