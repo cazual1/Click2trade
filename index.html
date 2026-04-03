@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Click2Trade — AI-Powered Vehicle Trading</title>
+<meta name="description" content="Sell your car without the runaround. AI values your vehicle, contacts dealers, negotiates the best price.">
+<style>
+@keyframes fadeUp { from { opacity: 0; transform: translateY(32px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95) } to { opacity: 1; transform: scale(1) } }
+@keyframes breathe { 0%,100% { opacity: 0.4 } 50% { opacity: 1 } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-12px) } to { opacity: 1; transform: translateX(0) } }
+@keyframes dotPulse { 0%,100% { opacity: 0.2 } 50% { opacity: 1 } }
+
+:root {
+  --bg: #000000; --surface: #0a0a0a; --card: #111111; --card-hover: #161616;
+  --border: #1d1d1f; --text-1: #f5f5f7; --text-2: #a1a1a6; --text-3: #6e6e73;
+  --blue: #0071e3; --green: #30d158; --orange: #ff9f0a; --red: #ff453a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh; background: var(--bg); color: var(--text-1);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  line-height: 1.4;
+}
+::selection { background: #0071e340; }
+::-webkit-scrollbar { width: 0px; }
+option { background: #1d1d1f; color: #f5f5f7; }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(0,0,0,0.72); backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+}
+nav .inner { max-width: 1080px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; }
+nav .logo { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; color: var(--text-1); }
+nav .logo span { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+nav .links { display: flex; gap: 28px; font-size: 12px; color: var(--text-2); }
+nav .links a { color: inherit; text-decoration: none; cursor: pointer; transition: color 0.2s; }
+nav .links a:hover { color: var(--text-1); }
+
+main { max-width: 1080px; margin: 0 auto; padding: 0 24px; padding-top: 52px; }
+
+.step { display: none; }
+.step.active { display: block; }
+
+.step-transition { animation: fadeUp 0.7s ease; }
+
+/* Buttons */
+.btn-primary {
+  background: var(--blue); color: #fff; border: none; padding: 16px 36px;
+  border-radius: 980px; font-size: 17px; font-weight: 500; cursor: pointer;
+  transition: all 0.3s; letter-spacing: -0.2px; font-family: inherit;
+}
+.btn-primary:hover { background: #0077ED; transform: scale(1.04); }
+
+.btn-block {
+  width: 100%; padding: 16px; border-radius: 14px; border: none;
+  font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.3s;
+  letter-spacing: -0.2px; font-family: inherit;
+}
+.btn-block:hover { transform: scale(1.02); }
+.btn-block.blue { background: var(--blue); color: #fff; }
+.btn-block.white { background: var(--text-1); color: var(--bg); }
+.btn-block.green { background: var(--green); color: #fff; }
+.btn-block.ghost { background: transparent; color: var(--blue); border: none; }
+.btn-block.disabled { background: var(--border); color: var(--text-3); cursor: not-allowed; transform: none !important; }
+
+/* Forms */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .full { grid-column: 1 / -1; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-3); margin-bottom: 8px; letter-spacing: 0.3px; }
+.form-select, .form-input {
+  width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--border);
+  background: var(--card); color: var(--text-1); font-size: 15px; font-family: inherit;
+  outline: none; appearance: none; -webkit-appearance: none; transition: border-color 0.2s;
+}
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center;
+}
+.form-select:focus, .form-input:focus { border-color: var(--blue); }
+.form-select:disabled { opacity: 0.4; }
+
+/* Cards */
+.card-stack { display: flex; flex-direction: column; gap: 1px; background: var(--border); border-radius: 20px; overflow: hidden; }
+.card-stack .card { background: var(--card); padding: 20px 24px; cursor: pointer; transition: background 0.2s; }
+.card-stack .card:hover { background: var(--card-hover); }
+.card-stack .card-expanded { padding: 0 24px 20px; background: var(--card-hover); display: flex; gap: 8px; animation: fadeIn 0.25s ease; }
+
+/* Grid stats */
+.stat-grid { display: grid; gap: 1px; background: var(--border); border-radius: 16px; overflow: hidden; }
+.stat-grid .stat { background: var(--card); padding: 20px 24px; }
+.stat-grid .stat-label { font-size: 11px; color: var(--text-3); margin-bottom: 6px; }
+.stat-grid .stat-value { font-size: 22px; font-weight: 700; letter-spacing: -1px; }
+
+/* Process grid */
+.process-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--border); border-radius: 20px; overflow: hidden; }
+.process-grid .process-card { background: var(--surface); padding: 36px 28px; text-align: left; }
+
+.stars { font-size: 10px; letter-spacing: 0.5px; color: var(--text-3); }
+.stars .dim { opacity: 0.25; }
+
+footer { text-align: center; padding: 40px 24px; font-size: 11px; color: var(--text-3); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a class="logo" onclick="goStep(0)">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#f5f5f7" stroke-width="1.5"/><path d="M8 12l3 3 5-6" stroke="#f5f5f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Click2Trade</span>
+    </a>
+    <div class="links">
+      <a>How It Works</a>
+      <a>Pricing</a>
+      <a>Support</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- STEP 0: LANDING -->
+  <div id="step0" class="step active">
+    <div style="min-height:calc(100vh - 52px); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:40px 0 80px">
+      <div style="animation:fadeUp 1s ease">
+        <h1 style="font-size:clamp(44px,7vw,80px); font-weight:700; letter-spacing:-3px; line-height:1.0; margin-bottom:20px; background:linear-gradient(180deg,#f5f5f7 0%,#6e6e73 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent">
+          Sell your car.<br>Skip the runaround.
+        </h1>
+      </div>
+      <p style="animation:fadeUp 1s ease 0.15s both; font-size:clamp(16px,2vw,21px); color:var(--text-3); line-height:1.5; max-width:520px; margin-bottom:48px; font-weight:400">
+        AI values your vehicle. Contacts every dealer nearby. Negotiates the best price. You just choose.
+      </p>
+      <div style="animation:fadeUp 1s ease 0.3s both">
+        <button class="btn-primary" onclick="goStep(1)">Get Started</button>
+      </div>
+
+      <div style="animation:fadeUp 1s ease 0.5s both; display:flex; gap:56px; margin-top:96px; flex-wrap:wrap; justify-content:center" id="hero-stats">
+      </div>
+
+      <div style="animation:fadeUp 1s ease 0.7s both; margin-top:100px; width:100%; max-width:880px">
+        <div class="process-grid" id="process-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: FORM -->
+  <div id="step1" class="step">
+    <div style="max-width:480px; margin:80px auto 60px" class="step-transition">
+      <div style="text-align:center; margin-bottom:40px">
+        <h2 style="font-size:32px; font-weight:700; letter-spacing:-1.2px; margin-bottom:8px">Your Vehicle</h2>
+        <p style="font-size:15px; color:var(--text-3)">Enter your details for an instant valuation.</p>
+      </div>
+      <div class="form-grid" id="vehicle-form"></div>
+      <button id="btn-valuate" class="btn-block blue disabled" style="margin-top:28px" onclick="handleGetValuation()" disabled>Get Valuation</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: VALUATION -->
+  <div id="step2" class="step">
+    <div style="max-width:520px; margin:80px auto 60px; text-align:center" class="step-transition">
+      <div style="font-size:13px; color:var(--text-3); margin-bottom:6px">AI Valuation</div>
+      <h2 id="val-title" style="font-size:24px; font-weight:600; letter-spacing:-0.8px; margin-bottom:4px"></h2>
+      <div id="val-subtitle" style="font-size:13px; color:var(--text-3); margin-bottom:48px"></div>
+      <div style="margin-bottom:48px">
+        <div id="val-price" style="font-size:64px; font-weight:700; letter-spacing:-3px; line-height:1"></div>
+        <div style="font-size:13px; color:var(--text-3); margin-top:12px">Estimated Market Value</div>
+      </div>
+      <div id="val-range" class="stat-grid" style="grid-template-columns:1fr 1fr 1fr; margin-bottom:48px"></div>
+      <div style="font-size:11px; color:var(--text-3); margin-bottom:32px">Based on 2.1M recent transactions</div>
+      <button class="btn-block blue" onclick="startSearch()">Find Buyers Near Me</button>
+      <button class="btn-block ghost" style="margin-top:12px" onclick="goStep(1)">Edit Details</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: SEARCHING -->
+  <div id="step3" class="step">
+    <div style="max-width:520px; margin:80px auto 60px" class="step-transition">
+      <div style="text-align:center; margin-bottom:48px">
+        <div style="display:inline-flex; align-items:center; gap:6px; margin-bottom:16px">
+          <span style="width:6px; height:6px; border-radius:50%; background:var(--green); animation:breathe 2s infinite"></span>
+          <span style="font-size:12px; color:var(--green); font-weight:500">Agent Active</span>
+        </div>
+        <h2 style="font-size:28px; font-weight:700; letter-spacing:-1.2px; margin-bottom:8px">Contacting Buyers</h2>
+        <p id="search-zip" style="font-size:14px; color:var(--text-3)"></p>
+      </div>
+      <div style="height:2px; background:var(--border); border-radius:1px; overflow:hidden; margin-bottom:40px">
+        <div id="search-bar" style="height:100%; width:0%; background:var(--blue); border-radius:1px; transition:width 0.4s ease"></div>
+      </div>
+      <div style="display:flex; justify-content:center; gap:64px; margin-bottom:48px">
+        <div style="text-align:center">
+          <div id="search-contacted" style="font-size:40px; font-weight:700; letter-spacing:-2px">0</div>
+          <div style="font-size:12px; color:var(--text-3)">Contacted</div>
+        </div>
+        <div style="text-align:center">
+          <div id="search-quotes" style="font-size:40px; font-weight:700; letter-spacing:-2px; color:var(--green)">0</div>
+          <div style="font-size:12px; color:var(--text-3)">Quotes</div>
+        </div>
+      </div>
+      <div id="search-feed" class="card-stack"></div>
+    </div>
+  </div>
+
+  <!-- STEP 4: ALL QUOTES -->
+  <div id="step4" class="step">
+    <div style="max-width:600px; margin:80px auto 60px" class="step-transition">
+      <div style="text-align:center; margin-bottom:40px">
+        <h2 id="quotes-title" style="font-size:32px; font-weight:700; letter-spacing:-1.2px; margin-bottom:8px"></h2>
+        <p id="quotes-subtitle" style="font-size:14px; color:var(--text-3)"></p>
+      </div>
+      <div id="quotes-list" class="card-stack"></div>
+      <button class="btn-block white" style="margin-top:28px" onclick="startNegotiation()">Negotiate All Offers</button>
+      <div style="text-align:center; font-size:12px; color:var(--text-3); margin-top:12px">AI agent will contact all dealers for their best and final price</div>
+    </div>
+  </div>
+
+  <!-- STEP 5: NEGOTIATING -->
+  <div id="step5" class="step">
+    <div style="max-width:480px; margin:80px auto 60px; text-align:center" class="step-transition">
+      <div style="display:inline-flex; gap:4px; margin-bottom:24px">
+        <span style="width:6px; height:6px; border-radius:50%; background:var(--text-1); animation:dotPulse 1.4s infinite 0s"></span>
+        <span style="width:6px; height:6px; border-radius:50%; background:var(--text-1); animation:dotPulse 1.4s infinite 0.2s"></span>
+        <span style="width:6px; height:6px; border-radius:50%; background:var(--text-1); animation:dotPulse 1.4s infinite 0.4s"></span>
+      </div>
+      <h2 style="font-size:28px; font-weight:700; letter-spacing:-1.2px; margin-bottom:8px">Negotiating</h2>
+      <p style="font-size:14px; color:var(--text-3); margin-bottom:48px">Working to get you the best deal</p>
+      <div id="negotiate-steps" style="display:flex; flex-direction:column; gap:12px; text-align:left"></div>
+    </div>
+  </div>
+
+  <!-- STEP 6: FINAL -->
+  <div id="step6" class="step">
+    <div style="max-width:600px; margin:80px auto 60px" class="step-transition">
+      <div style="text-align:center; margin-bottom:48px">
+        <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(48,209,88,0.08); border:1px solid rgba(48,209,88,0.15); border-radius:980px; padding:8px 18px; font-size:12px; color:var(--green); font-weight:500; margin-bottom:20px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#30d158"/><path d="M8 12l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Negotiation Complete
+        </div>
+        <h2 style="font-size:36px; font-weight:700; letter-spacing:-1.5px; margin-bottom:8px">Your Best Offers</h2>
+        <p id="final-subtitle" style="font-size:15px; color:var(--text-3)"></p>
+      </div>
+      <div id="final-list" class="card-stack"></div>
+      <div id="final-summary" class="stat-grid" style="grid-template-columns:1fr 1fr; margin-top:32px"></div>
+    </div>
+  </div>
+
+</main>
+
+<footer id="footer" style="display:none">© 2026 Click2Trade, Inc.</footer>
+
+<script>
+const QUOTES = [
+  { id:1, dealer:"Pacific Coast Motors", type:"Dealership", distance:"2.3 mi", offer:28750, time:"2h ago", rating:4.8, reviews:342, avatar:"P", accent:"#0071e3" },
+  { id:2, dealer:"AutoNation Toyota OC", type:"Dealership", distance:"4.1 mi", offer:27200, time:"3h ago", rating:4.5, reviews:891, avatar:"A", accent:"#34c759" },
+  { id:3, dealer:"SoCal Auto Brokers", type:"Broker", distance:"6.7 mi", offer:29100, time:"1h ago", rating:4.9, reviews:127, avatar:"S", accent:"#ff9f0a" },
+  { id:4, dealer:"CarMax Tustin", type:"Dealership", distance:"8.2 mi", offer:26800, time:"4h ago", rating:4.3, reviews:1203, avatar:"C", accent:"#ff3b30" },
+  { id:5, dealer:"Elite Vehicle Exchange", type:"Broker", distance:"3.5 mi", offer:29500, time:"45m ago", rating:4.7, reviews:89, avatar:"E", accent:"#af52de" },
+  { id:6, dealer:"Irvine Auto Group", type:"Dealership", distance:"5.9 mi", offer:27900, time:"2h ago", rating:4.6, reviews:567, avatar:"I", accent:"#5ac8fa" },
+];
+const NEGOTIATED = [{id:5,offer:30800},{id:3,offer:30200},{id:1,offer:29900},{id:6,offer:29100},{id:2,offer:28500},{id:4,offer:27600}];
+const MAKES = ["Tesla","Toyota","Honda","BMW","Mercedes-Benz","Ford","Chevrolet","Hyundai","Kia","Lexus","Audi","Porsche"];
+const MODELS = {Tesla:["Model 3","Model Y","Model S","Model X","Cybertruck"],Toyota:["Camry","RAV4","Corolla","Highlander","Tacoma","4Runner"],Honda:["Civic","Accord","CR-V","Pilot","HR-V"],Ford:["F-150","Mustang","Explorer","Bronco","Escape"],BMW:["3 Series","5 Series","X3","X5","i4","iX"],"Mercedes-Benz":["C-Class","E-Class","GLC","GLE","EQS"],Chevrolet:["Silverado","Equinox","Traverse","Camaro","Corvette"],Hyundai:["Tucson","Elantra","Santa Fe","Palisade","Ioniq 5"],Kia:["Telluride","Sportage","K5","EV6","EV9"],Lexus:["RX","NX","ES","IS","GX"],Audi:["A4","Q5","A6","Q7","e-tron GT"],Porsche:["Cayenne","Macan","Taycan","911","Panamera"]};
+const CONDITIONS = ["Excellent","Good","Fair","Below Average"];
+const TRIMS = ["Base","Sport","Premium","Limited"];
+const YEARS = Array.from({length:15},(_,i)=>2025-i);
+
+let form = {year:"",make:"",model:"",trim:"",mileage:"",condition:"",zip:"92612"};
+let aiValue = null;
+let currentStep = 0;
+let expandedId = null;
+let timer = null;
+
+const fmt = n => "$" + n.toLocaleString();
+const stars = r => "★".repeat(Math.floor(r)) + '<span class="dim">' + "★".repeat(5-Math.floor(r)) + "</span> " + r;
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
+  document.getElementById('footer').style.display = n > 0 ? 'block' : 'none';
+  currentStep = n;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Build landing
+(function(){
+  const statsData = [["12,400+","Cars Traded"],["$2,100","Above Market Avg"],["< 4 hrs","Time to Offer"],["94%","Accept Rate"]];
+  document.getElementById('hero-stats').innerHTML = statsData.map(([v,l])=>`<div style="text-align:center"><div style="font-size:32px;font-weight:700;letter-spacing:-1.5px">${v}</div><div style="font-size:12px;color:var(--text-3);margin-top:6px">${l}</div></div>`).join('');
+
+  const processData = [["Enter Details","30 seconds. Year, make, model, mileage, condition."],["Instant AI Valuation","Trained on 2M+ real transactions. Know your car\u2019s true worth."],["Dealers Compete","Our AI agent contacts 10\u201315 buyers and gets real quotes."],["Pick Your Best Offer","One-click negotiation. Accept when you\u2019re ready."]];
+  document.getElementById('process-grid').innerHTML = processData.map(([t,d],i)=>`<div class="process-card"><div style="font-size:11px;font-weight:600;color:var(--text-3);margin-bottom:12px;letter-spacing:1px">0${i+1}</div><div style="font-size:17px;font-weight:600;letter-spacing:-0.3px;margin-bottom:8px">${t}</div><div style="font-size:13px;color:var(--text-3);line-height:1.55">${d}</div></div>`).join('');
+})();
+
+// Build form
+function buildForm() {
+  const fg = document.getElementById('vehicle-form');
+  fg.innerHTML = `
+    <div><label class="form-label">Year</label><select class="form-select" id="f-year" onchange="updateForm('year',this.value)"><option value="">Select</option>${YEARS.map(y=>`<option value="${y}">${y}</option>`).join('')}</select></div>
+    <div><label class="form-label">Make</label><select class="form-select" id="f-make" onchange="updateForm('make',this.value)"><option value="">Select</option>${MAKES.map(m=>`<option value="${m}">${m}</option>`).join('')}</select></div>
+    <div><label class="form-label">Model</label><select class="form-select" id="f-model" onchange="updateForm('model',this.value)" ${!form.make?'disabled':''}><option value="">Select</option>${(MODELS[form.make]||[]).map(m=>`<option value="${m}"${form.model===m?' selected':''}>${m}</option>`).join('')}</select></div>
+    <div><label class="form-label">Trim</label><select class="form-select" id="f-trim" onchange="updateForm('trim',this.value)" ${!form.model?'disabled':''}><option value="">Select</option>${TRIMS.map(t=>`<option value="${t}"${form.trim===t?' selected':''}>${t}</option>`).join('')}</select></div>
+    <div><label class="form-label">Mileage</label><input class="form-input" id="f-mileage" placeholder="e.g. 32,000" value="${form.mileage}" oninput="updateForm('mileage',this.value.replace(/\\D/g,''))"></div>
+    <div><label class="form-label">Condition</label><select class="form-select" id="f-condition" onchange="updateForm('condition',this.value)"><option value="">Select</option>${CONDITIONS.map(c=>`<option value="${c}"${form.condition===c?' selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="full"><label class="form-label">ZIP Code</label><input class="form-input" id="f-zip" value="${form.zip}" oninput="updateForm('zip',this.value)"></div>
+  `;
+  if(form.year) document.getElementById('f-year').value = form.year;
+  if(form.make) document.getElementById('f-make').value = form.make;
+  checkFormValid();
+}
+
+function updateForm(key, val) {
+  form[key] = val;
+  if(key==='make'){form.model='';form.trim='';buildForm();}
+  else if(key==='model'){form.trim='';buildForm();}
+  checkFormValid();
+}
+
+function checkFormValid() {
+  const valid = form.year && form.make && form.model && form.mileage && form.condition;
+  const btn = document.getElementById('btn-valuate');
+  btn.disabled = !valid;
+  btn.className = 'btn-block ' + (valid ? 'blue' : 'blue disabled');
+}
+
+function handleGetValuation() {
+  const base = 24000 + Math.random() * 12000;
+  const mp = (parseInt(form.mileage)||30000) * 0.04;
+  const cm = form.condition==="Excellent"?1.1:form.condition==="Good"?1.0:form.condition==="Fair"?0.88:0.75;
+  const val = Math.round((base-mp)*cm);
+  aiValue = {low:Math.round(val*0.9), mid:val, high:Math.round(val*1.12)};
+
+  document.getElementById('val-title').textContent = `${form.year} ${form.make} ${form.model}`;
+  document.getElementById('val-subtitle').textContent = `${parseInt(form.mileage).toLocaleString()} miles \u00B7 ${form.condition}`;
+  document.getElementById('val-price').textContent = fmt(aiValue.mid);
+  document.getElementById('val-range').innerHTML = [["Low",aiValue.low,"var(--text-3)"],["Market",aiValue.mid,"var(--text-1)"],["High",aiValue.high,"var(--green)"]].map(([l,v,c])=>`<div class="stat"><div class="stat-label">${l}</div><div class="stat-value" style="color:${c}">${fmt(v)}</div></div>`).join('');
+  goStep(2);
+}
+
+function startSearch() {
+  goStep(3);
+  document.getElementById('search-zip').textContent = `Searching near ${form.zip}`;
+  document.getElementById('search-bar').style.width = '0%';
+  document.getElementById('search-contacted').textContent = '0';
+  document.getElementById('search-quotes').textContent = '0';
+  document.getElementById('search-feed').innerHTML = '';
+
+  let p=0, d=0, q=0;
+  timer = setInterval(()=>{
+    p += Math.random()*7+2; if(p>100)p=100;
+    document.getElementById('search-bar').style.width = Math.round(p)+'%';
+    if(p>15&&d<12){d=Math.min(12,d+Math.floor(Math.random()*3)+1); document.getElementById('search-contacted').textContent=d;}
+    if(p>35&&q<QUOTES.length){
+      const quote=QUOTES[q]; q++;
+      document.getElementById('search-quotes').textContent=q;
+      document.getElementById('search-feed').innerHTML += `<div class="card" style="animation:slideIn 0.4s ease; cursor:default; display:flex; align-items:center; gap:14px; padding:16px 20px">
+        <div style="width:36px;height:36px;border-radius:10px;background:${quote.accent}15;color:${quote.accent};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0">${quote.avatar}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500">${quote.dealer}</div><div style="font-size:11px;color:var(--text-3);margin-top:2px">${quote.type} \u00B7 ${quote.distance}</div></div>
+        <div style="font-size:18px;font-weight:600;letter-spacing:-0.5px">${fmt(quote.offer)}</div>
+      </div>`;
+    }
+    if(p>=100){clearInterval(timer);setTimeout(()=>{renderQuotes();goStep(4);},700);}
+  },400);
+}
+
+function renderQuotes() {
+  const sorted = [...QUOTES].sort((a,b)=>b.offer-a.offer);
+  const best = sorted[0].offer;
+  document.getElementById('quotes-title').textContent = `${QUOTES.length} Offers`;
+  document.getElementById('quotes-subtitle').innerHTML = `${form.year} ${form.make} ${form.model} \u00B7 Best offer <span style="color:var(--green);font-weight:600">${fmt(best)}</span>`;
+
+  document.getElementById('quotes-list').innerHTML = sorted.map((q,i)=>`
+    <div>
+      <div class="card" onclick="toggleQuote(${q.id})" style="display:flex;align-items:center;gap:16px;padding:20px 24px" id="qcard-${q.id}">
+        <div style="position:relative">
+          <div style="width:40px;height:40px;border-radius:12px;background:${q.accent}12;color:${q.accent};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600">${q.avatar}</div>
+          ${i===0?'<div style="position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff">\u2713</div>':''}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px">${q.dealer}${i===0?'<span style="font-size:10px;color:var(--green);font-weight:600;background:rgba(48,209,88,0.1);padding:2px 8px;border-radius:4px">Highest</span>':''}</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:3px">${q.type} \u00B7 ${q.distance} \u00B7 <span class="stars">${stars(q.rating)}</span></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:600;letter-spacing:-1px">${fmt(q.offer)}</div>
+          <div style="font-size:11px;color:var(--text-3)">${q.time}</div>
+        </div>
+      </div>
+      <div class="card-expanded" id="qexp-${q.id}" style="display:none">
+        <button class="btn-block blue" style="flex:1;padding:12px;border-radius:12px;font-size:13px">Accept Offer</button>
+        <button style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:13px;cursor:pointer;font-family:inherit">Message</button>
+        <button style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:13px;cursor:pointer;font-family:inherit">Profile</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleQuote(id) {
+  if(expandedId && expandedId !== id) document.getElementById('qexp-'+expandedId).style.display='none';
+  const el = document.getElementById('qexp-'+id);
+  if(expandedId===id){el.style.display='none';expandedId=null;}
+  else{el.style.display='flex';expandedId=id;}
+}
+
+function startNegotiation() {
+  goStep(5);
+  const msgs = ["Analyzing market leverage","Sending counter-offers","3 dealers improved their price","Pushing for final numbers","Locking in best offers"];
+  const container = document.getElementById('negotiate-steps');
+  container.innerHTML = msgs.map((m,i)=>`
+    <div id="nstep-${i}" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:14px;border:1px solid transparent;opacity:0.2;transition:all 0.5s ease">
+      <div id="nicon-${i}" style="width:28px;height:28px;border-radius:8px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:600;flex-shrink:0;transition:all 0.4s">${i+1}</div>
+      <span style="font-size:14px;color:var(--text-3);transition:color 0.4s" id="nmsg-${i}">${m}</span>
+    </div>
+  `).join('');
+
+  let ns = -1;
+  function tick() {
+    ns++;
+    if(ns >= msgs.length) {
+      clearInterval(timer);
+      setTimeout(()=>{renderFinal();goStep(6);},1400);
+      return;
+    }
+    // Mark previous as done
+    if(ns>0) {
+      document.getElementById('nicon-'+(ns-1)).style.background='var(--green)';
+      document.getElementById('nicon-'+(ns-1)).textContent='\u2713';
+    }
+    // Activate current
+    const step = document.getElementById('nstep-'+ns);
+    step.style.opacity='1';
+    step.style.background='var(--card)';
+    step.style.borderColor='var(--border)';
+    document.getElementById('nicon-'+ns).style.background='var(--blue)';
+    document.getElementById('nmsg-'+ns).style.color='var(--text-1)';
+    // Activate all previous
+    for(let j=0;j<ns;j++){
+      document.getElementById('nstep-'+j).style.opacity='1';
+      document.getElementById('nstep-'+j).style.background='var(--card)';
+      document.getElementById('nstep-'+j).style.borderColor='var(--border)';
+      document.getElementById('nmsg-'+j).style.color='var(--text-1)';
+    }
+  }
+  tick();
+  timer = setInterval(tick, 1600);
+}
+
+function renderFinal() {
+  // Mark last step done
+  if(document.getElementById('nicon-4')){
+    document.getElementById('nicon-4').style.background='var(--green)';
+    document.getElementById('nicon-4').textContent='\u2713';
+  }
+
+  const bestInitial = Math.max(...QUOTES.map(q=>q.offer));
+  const gain = NEGOTIATED[0].offer - bestInitial;
+  document.getElementById('final-subtitle').innerHTML = `Best offer improved by <span style="color:var(--green);font-weight:600">${fmt(gain)}</span>`;
+
+  document.getElementById('final-list').innerHTML = NEGOTIATED.map((n,i)=>{
+    const q = QUOTES.find(x=>x.id===n.id);
+    const diff = n.offer - q.offer;
+    return `<div style="background:var(--card);padding:${i===0?'24px':'18px 24px'};animation:fadeUp 0.5s ease ${i*0.07}s both">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:${i===0?48:40}px;height:${i===0?48:40}px;border-radius:14px;background:${i===0?'var(--green)':q.accent+'12'};color:${i===0?'#fff':q.accent};display:flex;align-items:center;justify-content:center;font-size:${i===0?18:14}px;font-weight:600;flex-shrink:0">${q.avatar}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:${i===0?16:14}px;font-weight:500">${q.dealer}</span>
+            ${i===0?'<span style="font-size:10px;color:var(--green);font-weight:600">Best</span>':''}
+          </div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${q.type} \u00B7 ${q.distance} \u00B7 <span class="stars">${stars(q.rating)}</span></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:${i===0?26:20}px;font-weight:700;letter-spacing:-1px;color:${i===0?'var(--green)':'var(--text-1)'}">${fmt(n.offer)}</div>
+          <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center;margin-top:2px">
+            <span style="font-size:11px;color:var(--text-3);text-decoration:line-through">${fmt(q.offer)}</span>
+            <span style="font-size:11px;color:var(--green);font-weight:500">+${fmt(diff)}</span>
+          </div>
+        </div>
+      </div>
+      ${i===0?`<div style="display:flex;gap:8px;margin-top:20px">
+        <button class="btn-block green" style="flex:2;padding:14px;border-radius:12px;font-size:15px;font-weight:600">Accept ${fmt(n.offer)}</button>
+        <button style="flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:14px;cursor:pointer;font-family:inherit">Schedule</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('final-summary').innerHTML = [
+    ["AI Valuation",fmt(aiValue?.mid||0),"var(--text-2)"],
+    ["Best Initial Quote",fmt(bestInitial),"var(--text-2)"],
+    ["Best Final Offer",fmt(NEGOTIATED[0].offer),"var(--green)"],
+    ["Negotiation Gain","+"+fmt(gain),"var(--orange)"],
+  ].map(([l,v,c])=>`<div class="stat"><div class="stat-label">${l}</div><div class="stat-value" style="color:${c}">${v}</div></div>`).join('');
+}
+
+// Init form on first visit
+buildForm();
+// Re-build form when navigating back
+const origGoStep = goStep;
+goStep = function(n) {
+  origGoStep(n);
+  if(n===1) buildForm();
+};
+</script>
+
+</body>
+</html>
