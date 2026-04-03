@@ -1,9 +1,9 @@
 // Click2Trade WhatsApp Bot
-// Stack: Node.js + Express + Twilio WhatsApp API + Claude API + Supabase
+// Stack: Node.js + Express + Twilio WhatsApp API + OpenAI API + Supabase
 // Deploy: Railway, Render, or Supabase Edge Functions
 
 import express from 'express';
-import { Anthropic } from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import twilio from 'twilio';
 import { createClient } from '@supabase/supabase-js';
 
@@ -16,14 +16,14 @@ const {
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
   TWILIO_WHATSAPP_NUMBER, // e.g. "whatsapp:+14155238886"
-  ANTHROPIC_API_KEY,
+  OPENAI_API_KEY,
   SUPABASE_URL,
   SUPABASE_SERVICE_KEY,
   AUTOGRAB_API_KEY, // Optional: for real valuations
 } = process.env;
 
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // ── CONVERSATION STATE ──
@@ -105,24 +105,24 @@ async function chat(session, userMessage) {
     contextNote = `\n\n[CONTEXT: Negotiation complete. Final offers: ${JSON.stringify(session.finalOffers)}. Best offer: A$${session.finalOffers[0].offer.toLocaleString()} from ${session.finalOffers[0].dealer}]`;
   }
 
-  const messagesForClaude = [
-    ...session.messages.slice(-20), // Keep last 20 messages for context window
+  const messagesForLLM = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...session.messages.slice(-20),
   ];
   if (contextNote) {
-    messagesForClaude[messagesForClaude.length - 1] = {
+    messagesForLLM[messagesForLLM.length - 1] = {
       role: 'user',
       content: userMessage + contextNote,
     };
   }
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
     max_tokens: 500,
-    system: SYSTEM_PROMPT,
-    messages: messagesForClaude,
+    messages: messagesForLLM,
   });
 
-  const reply = response.content[0].text;
+  const reply = response.choices[0].message.content;
   session.messages.push({ role: 'assistant', content: reply });
 
   return reply;
