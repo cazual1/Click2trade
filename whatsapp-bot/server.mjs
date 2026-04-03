@@ -24,7 +24,9 @@ const {
 
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null;
 
 // ── CONVERSATION STATE ──
 // In production, this lives in Supabase. In-memory for dev.
