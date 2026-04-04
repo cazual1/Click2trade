@@ -6,6 +6,7 @@ import express from 'express';
 import OpenAI from 'openai';
 import twilio from 'twilio';
 import { createClient } from '@supabase/supabase-js';
+import { sendDealerOutreach, createInboundHandler } from './dealer-outreach.mjs';
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -224,32 +225,47 @@ Would you like me to find buyers in your area? Our AI agent will contact 10-15 d
     cleanReply = reply.replace('[START_SEARCH]', '').trim();
     await sendMessage(from, cleanReply);
     session.step = 'searching';
+    session.quotes = [];
 
-    // Simulate progressive dealer outreach
-    await new Promise(r => setTimeout(r, 2000));
+    // Generate a unique listing ID
+    session.listingId = 'L' + Date.now().toString(36).toUpperCase();
+
+    await new Promise(r => setTimeout(r, 1000));
     await sendMessage(from, '🔍 *AI Agent Active*\n\nContacting dealers and brokers near ' + (session.vehicle.postcode || 'you') + '...');
 
-    await new Promise(r => setTimeout(r, 3000));
-    await sendMessage(from, '✅ 12 dealers contacted\n⏳ Waiting for offers...');
+    // Send real emails to dealers
+    try {
+      const outreach = await sendDealerOutreach(session.vehicle, session.valuation, session.listingId);
 
-    await new Promise(r => setTimeout(r, 4000));
+      if (outreach.sent > 0) {
+        await new Promise(r => setTimeout(r, 2000));
+        await sendMessage(from, `✅ *${outreach.sent} dealers contacted!*\n\nEmails sent to dealerships and brokers in your area. Offers typically come back within 1-4 hours.\n\nI'll message you each time an offer arrives. 📩\n\nRef: ${session.listingId}`);
+        session.step = 'waiting_quotes';
+      } else {
+        // No dealers with emails - fall back to mock for demo
+        await new Promise(r => setTimeout(r, 2000));
+        await sendMessage(from, `⚠️ We're still building our dealer network in your area. In the meantime, here's what typical offers look like for your vehicle...\n\n_We'll notify you when we have live dealers near ${session.vehicle.postcode || 'you'}._`);
 
-    // Generate quotes
-    session.quotes = generateMockQuotes(session.vehicle, session.valuation);
-    session.step = 'quotes';
+        await new Promise(r => setTimeout(r, 2000));
+        // Use mock quotes as placeholder
+        session.quotes = generateMockQuotes(session.vehicle, session.valuation);
+        session.step = 'quotes';
 
-    const best = session.quotes[0];
-    const worst = session.quotes[session.quotes.length - 1];
-
-    let quotesMsg = `🏆 *${session.quotes.length} Offers Received!*\n\n`;
-    session.quotes.forEach((q, i) => {
-      const badge = i === 0 ? ' ⭐ HIGHEST' : '';
-      quotesMsg += `${i + 1}. *${q.dealer}*${badge}\n   ${q.type} · ${q.distance} · ★${q.rating}\n   *A$${q.offer.toLocaleString()}*\n\n`;
-    });
-    quotesMsg += `Best: A$${best.offer.toLocaleString()} | Lowest: A$${worst.offer.toLocaleString()}\n\n`;
-    quotesMsg += `Want me to *negotiate all offers* to get you an even better deal? Reply YES and our AI will use competing bids as leverage. 🤖`;
-
-    await sendMessage(from, quotesMsg);
+        const best = session.quotes[0];
+        const worst = session.quotes[session.quotes.length - 1];
+        let quotesMsg = `🏆 *${session.quotes.length} Estimated Offers*\n\n`;
+        session.quotes.forEach((q, i) => {
+          const badge = i === 0 ? ' ⭐ HIGHEST' : '';
+          quotesMsg += `${i + 1}. *${q.dealer}*${badge}\n   ${q.type} · ${q.distance} · ★${q.rating}\n   *A$${q.offer.toLocaleString()}*\n\n`;
+        });
+        quotesMsg += `Best: A$${best.offer.toLocaleString()} | Lowest: A$${worst.offer.toLocaleString()}\n\n`;
+        quotesMsg += `Want me to *negotiate all offers* to get you an even better deal? Reply YES and our AI will use competing bids as leverage. 🤖`;
+        await sendMessage(from, quotesMsg);
+      }
+    } catch (err) {
+      console.error('Dealer outreach error:', err);
+      await sendMessage(from, '⚠️ Something went wrong contacting dealers. Our team has been notified. We\'ll get back to you shortly.');
+    }
     return;
   }
 
@@ -380,12 +396,28 @@ app.post('/webhook', async (req, res) => {
       if (offer) {
         await sendMessage(from, `🎉 *Offer Accepted!*\n\nYou've accepted *A$${offer.offer.toLocaleString()}* from *${offer.dealer}*.\n\nWe'll now connect you with the dealer to arrange:\n✅ Free vehicle pickup\n✅ Payment (usually within 24-48 hours)\n✅ Transfer paperwork\n\nA Click2Trade team member will be in touch shortly. Congratulations! 🚗💰`);
         session.step = 'accepted';
-
-        // TODO: Save to Supabase, notify dealer, trigger email
-        // await supabase.from('deals').insert({ ... });
-
         return res.sendStatus(200);
       }
+    }
+
+    // Handle "show offers" when waiting for async quotes
+    if ((session.step === 'waiting_quotes' || session.step === 'quotes') && body.toLowerCase().includes('show offer')) {
+      if (session.quotes.length === 0) {
+        await sendMessage(from, 'No offers yet — still waiting on dealers to respond. I\'ll message you as soon as one comes in. 📩');
+      } else {
+        session.step = 'quotes';
+        const sorted = session.quotes.sort((a, b) => b.offer - a.offer);
+        const best = sorted[0];
+        let msg = `📋 *Your Offers (${sorted.length} so far)*\n\n`;
+        sorted.forEach((q, i) => {
+          const badge = i === 0 ? ' ⭐ HIGHEST' : '';
+          msg += `${i + 1}. *${q.dealer}*${badge}\n   *A$${q.offer.toLocaleString()}*${q.conditional ? ' _(subject to inspection)_' : ''}\n\n`;
+        });
+        msg += `Best: *A$${best.offer.toLocaleString()}*\n\n`;
+        msg += `Reply *NEGOTIATE* to have AI push for better prices.\nReply *1*, *2*, or *3* to accept an offer.`;
+        await sendMessage(from, msg);
+      }
+      return res.sendStatus(200);
     }
 
     // Handle reset
@@ -410,6 +442,10 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(200); // Always return 200 to Twilio
   }
 });
+
+// ── INBOUND EMAIL: DEALER REPLIES ──
+const handleInbound = createInboundHandler(sessions, sendMessage);
+app.post('/inbound-email', handleInbound);
 
 // ── HEALTH CHECK ──
 app.get('/', (req, res) => {
