@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Click2Trade — WhatsApp Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:#000;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Helvetica,sans-serif;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-1.5px;text-align:center;margin-bottom:8px;background:linear-gradient(180deg,#f5f5f7,#6e6e73);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{font-size:15px;color:#6e6e73;text-align:center;margin-bottom:32px;max-width:400px}
+.phone-frame{width:100%;max-width:400px;background:#0B141A;border-radius:24px;overflow:hidden;border:2px solid #1d1d1f;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.wa-header{background:#1F2C34;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid rgba(255,255,255,.06)}
+.wa-header .avatar{width:36px;height:36px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0}
+.wa-header .name{font-size:14px;font-weight:500;color:#E9EDEF}
+.wa-header .status{font-size:11px;color:#8696A0}
+#chat{padding:12px;min-height:420px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;scroll-behavior:smooth}
+#chat::-webkit-scrollbar{width:0}
+.msg{display:flex;margin:2px 0;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg.user{justify-content:flex-end}
+.msg.bot{justify-content:flex-start}
+.bubble{max-width:85%;padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
+.user .bubble{background:#005C4B;color:#E9EDEF;border-bottom-right-radius:2px}
+.bot .bubble{background:#1F2C34;color:#E9EDEF;border-bottom-left-radius:2px}
+.bubble b{font-weight:600}
+.bubble i{font-style:italic;opacity:.7}
+.controls{padding:8px 12px;background:#1B2631;display:flex;gap:8px;align-items:center}
+#nextBtn{flex:1;padding:10px 16px;border-radius:20px;border:none;background:#25D366;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:transform .15s}
+#nextBtn:active{transform:scale(.97)}
+.step-label{text-align:center;margin-top:12px;font-size:12px;color:#6e6e73}
+.back-link{margin-top:24px;font-size:13px;color:#0071e3;text-decoration:none;cursor:pointer}
+.back-link:hover{text-decoration:underline}
+.typing{display:flex;gap:4px;padding:10px 14px}
+.typing span{width:6px;height:6px;border-radius:50%;background:#8696A0;animation:typingDot 1.4s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes typingDot{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+</style>
+</head>
+<body>
+
+<h1>WhatsApp experience</h1>
+<p class="subtitle">Tap through to see how sellers use Click2Trade via WhatsApp to get competing dealer offers.</p>
+
+<div class="phone-frame">
+<div class="wa-header">
+<div class="avatar">C2T</div>
+<div>
+<div class="name">Click2Trade</div>
+<div class="status">online</div>
+</div>
+</div>
+
+<div id="chat"></div>
+
+<div class="controls">
+<button id="nextBtn" onclick="advance()">Tap to start</button>
+</div>
+</div>
+
+<div id="stepLabel" class="step-label"></div>
+<a class="back-link" href="index.html">&larr; Back to Click2Trade</a>
+
+<script>
+var chat=document.getElementById('chat');
+var btn=document.getElementById('nextBtn');
+var label=document.getElementById('stepLabel');
+var step=0;
+var typing=false;
+
+var messages=[
+{from:'user',text:"Hey, I want to sell my car"},
+{from:'bot',text:"Hey! \ud83d\udc4b Welcome to Click2Trade.\n\nI help Australians sell their cars for the best price \u2014 our AI contacts dealers, gets competing offers, and negotiates on your behalf.\n\nWhat car are you looking to sell?"},
+{from:'user',text:"2022 Toyota RAV4 GXL, about 45,000 km, good condition. I'm in 2060"},
+{from:'bot',text:"Nice \u2014 the RAV4 GXL is in high demand right now. Let me confirm:\n\n\ud83d\ude97 2022 Toyota RAV4 GXL\n\ud83d\udccf 45,000 km\n\u2705 Good condition\n\ud83d\udccd 2060 (North Sydney)\n\nLook right?"},
+{from:'user',text:"Yep that\u2019s it"},
+{from:'bot',text:"\ud83d\udcb0 <b>AI Valuation Result</b>\n\n\ud83d\ude97 2022 Toyota RAV4 GXL\n\ud83d\udccd 2060 \u00b7 45,000 km \u00b7 Good\n\n<b>Estimated Market Value: A$42,400</b>\n\nLow: A$37,300\nHigh: A$48,300\n\n<i>Based on current Australian market data</i>\n\nWould you like me to find buyers in your area? Our AI agent will email 10-15 dealers and get real quotes. \ud83d\udd0d"},
+{from:'user',text:"Yeah go for it"},
+{from:'bot',text:"\ud83d\udd0d <b>AI Agent Active</b>\n\nContacting dealers and brokers near North Sydney...\n\n\u2705 <b>14 dealers emailed!</b>\n\nOffers typically come back within 1-4 hours. I\u2019ll message you as each one arrives. \ud83d\udce9\n\nRef: L4F8KX2"},
+{from:'bot',text:"\ud83d\udcb0 <b>New offer received!</b>\n\n<b>Eastern Suburbs Motors</b> offered <b>A$41,500</b>\n\nYou now have <b>1 offer</b>. Still waiting on more dealers to respond.",delay:true},
+{from:'bot',text:"\ud83d\udcb0 <b>New offer received!</b>\n\n<b>Parramatta Auto Group</b> offered <b>A$43,100</b>\n\nYou now have <b>2 offers</b>. Best so far: <b>A$43,100</b>",delay:true},
+{from:'bot',text:"\ud83d\udcb0 <b>New offer received!</b>\n\n<b>Prestige Auto Brokers</b> offered <b>A$44,200</b> <i>(subject to inspection)</i>\n\nYou now have <b>5 offers</b>. Best so far: <b>A$44,200</b>\n\nWant me to show all offers? Reply <b>SHOW OFFERS</b>\nWant me to negotiate for better prices? Reply <b>NEGOTIATE</b>",delay:true},
+{from:'user',text:"SHOW OFFERS"},
+{from:'bot',text:"\ud83d\udccb <b>Your Offers (5 so far)</b>\n\n1. <b>Prestige Auto Brokers</b> \u2b50 HIGHEST\n   <b>A$44,200</b> <i>(subject to inspection)</i>\n\n2. <b>North Shore Automotive</b>\n   <b>A$43,800</b>\n\n3. <b>Parramatta Auto Group</b>\n   <b>A$43,100</b>\n\n4. <b>Sydney City Toyota</b>\n   <b>A$42,200</b>\n\n5. <b>Eastern Suburbs Motors</b>\n   <b>A$41,500</b>\n\nBest: <b>A$44,200</b>\n\nReply <b>NEGOTIATE</b> to have AI push for better prices.\nReply <b>1-5</b> to accept an offer."},
+{from:'user',text:"NEGOTIATE"},
+{from:'bot',text:"\ud83e\udd16 <b>AI Negotiation Started</b>\n\n1\ufe0f\u20e3 Analysing market leverage...\n2\ufe0f\u20e3 Sending counter-offers to all 5 dealers...\n3\ufe0f\u20e3 3 dealers improved their price \u2705\n4\ufe0f\u20e3 Locking in final numbers..."},
+{from:'bot',text:"\u2705 <b>Negotiation Complete!</b>\n\nBest offer improved by <b>A$1,600</b>\n\n1. <b>Prestige Auto Brokers</b> \ud83c\udfc6 BEST\n   <b>A$45,800</b> <i>(was A$44,200, +A$1,600)</i>\n\n2. <b>North Shore Automotive</b>\n   <b>A$45,100</b> <i>(was A$43,800, +A$1,300)</i>\n\n3. <b>Parramatta Auto Group</b>\n   <b>A$44,200</b> <i>(was A$43,100, +A$1,100)</i>\n\nReply <b>1</b>, <b>2</b>, or <b>3</b> to accept.\n\nYour details remain private until you accept."},
+{from:'user',text:"1"},
+{from:'bot',text:"\ud83c\udf89 <b>Offer Accepted!</b>\n\nYou\u2019ve accepted <b>A$45,800</b> from <b>Prestige Auto Brokers</b>.\n\nWe\u2019ll now connect you with the dealer to arrange:\n\u2705 Free vehicle pickup\n\u2705 Payment (usually within 24-48 hours)\n\u2705 Transfer paperwork\n\nCongratulations! \ud83d\ude97\ud83d\udcb0"},
+];
+
+function addMsg(msg,cb){
+  if(msg.from==='bot'){
+    // Show typing indicator first
+    var typDiv=document.createElement('div');
+    typDiv.className='msg bot show';
+    typDiv.id='typing-ind';
+    typDiv.innerHTML='<div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+    chat.appendChild(typDiv);
+    chat.scrollTop=chat.scrollHeight;
+    setTimeout(function(){
+      var t=document.getElementById('typing-ind');
+      if(t)t.remove();
+      renderBubble(msg);
+      if(cb)cb();
+    }, msg.delay?1200:800);
+  } else {
+    renderBubble(msg);
+    if(cb)cb();
+  }
+}
+
+function renderBubble(msg){
+  var div=document.createElement('div');
+  div.className='msg '+(msg.from==='user'?'user':'bot');
+  var bubble=document.createElement('div');
+  bubble.className='bubble';
+  bubble.innerHTML=msg.text;
+  div.appendChild(bubble);
+  chat.appendChild(div);
+  requestAnimationFrame(function(){
+    div.classList.add('show');
+  });
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function advance(){
+  if(typing)return;
+  if(step>=messages.length){
+    step=0;
+    chat.innerHTML='';
+    btn.textContent='Tap to start';
+    label.textContent='';
+    return;
+  }
+  typing=true;
+  btn.style.opacity='.5';
+  addMsg(messages[step],function(){
+    step++;
+    typing=false;
+    btn.style.opacity='1';
+    label.textContent='Step '+step+' of '+messages.length;
+    if(step>=messages.length){
+      btn.textContent='Restart demo';
+    } else {
+      btn.textContent='Tap to continue';
+    }
+    // Auto-advance bot follow-ups (like offer notifications)
+    if(step<messages.length && messages[step].delay && messages[step].from==='bot'){
+      setTimeout(function(){advance();},600);
+    }
+  });
+}
+</script>
+</body>
+</html>
