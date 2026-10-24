@@ -71,8 +71,10 @@ button.stat:hover{transform:translateY(-2px)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
 .card{background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
 .card:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(0,0,0,.04),0 16px 32px rgba(0,0,0,.08)}
-.ph{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;overflow:hidden}
-.ph img{width:100%;height:100%;object-fit:cover}
+.ph{position:relative;aspect-ratio:4/3;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;overflow:hidden}
+.ph img,.gal img.main{position:relative;width:100%;height:100%;object-fit:contain}
+.blur{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(22px) saturate(1.3);opacity:.55}
+.ph img~.mono,.gal img~.mono{display:none}
 .ph .mono{font-size:44px;font-weight:700;letter-spacing:-.04em;color:var(--text-3)}
 .ph .badge{position:absolute;top:12px;left:12px}
 .ph .unread{position:absolute;top:12px;right:12px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px}
@@ -106,9 +108,43 @@ button.stat:hover{transform:translateY(-2px)}
 .sh-head .t{font-weight:600;font-size:15px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .x{width:30px;height:30px;border-radius:50%;background:var(--fill);display:grid;place-items:center;color:var(--text-2);font-size:17px;flex-shrink:0}
 .sh-body{overflow-y:auto;padding:0 20px 40px;flex:1;-webkit-overflow-scrolling:touch}
-.sh-hero{margin:0 -20px;aspect-ratio:2/1;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;overflow:hidden}
-.sh-hero img{width:100%;height:100%;object-fit:cover}
-.sh-hero .mono{font-size:64px;font-weight:700;color:var(--text-3);letter-spacing:-.04em}
+.gal{margin:0 -20px;position:relative;aspect-ratio:4/3;max-height:58vh;width:calc(100% + 40px);background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;overflow:hidden;cursor:zoom-in}
+.gal .mono{font-size:64px;font-weight:700;color:var(--text-3);letter-spacing:-.04em}
+.gal .nav,.lb .nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:18px;display:grid;place-items:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:2}
+.gal .nav.p,.lb .nav.p{left:12px}.gal .nav.n,.lb .nav.n{right:12px}
+.gal .cnt{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px;z-index:2}
+.thumbs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.thumbs::-webkit-scrollbar{display:none}
+.thumbs button{flex:0 0 64px;height:48px;border-radius:8px;overflow:hidden;background:var(--fill);opacity:.55;transition:opacity .2s;outline-offset:2px}
+.thumbs button.on{opacity:1;outline:2px solid var(--blue)}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:35;display:none;place-items:center}
+.lb.on{display:grid}
+.lb img{max-width:100vw;max-height:100vh;object-fit:contain}
+.lb .x{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.16);color:#fff;z-index:2}
+.lb .cnt{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;opacity:.8}
+
+/* List view */
+.viewsw{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px}
+.viewsw button{width:34px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--text-2)}
+.viewsw button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tools-r{display:flex;align-items:center;gap:14px}
+.list{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.lrow{display:grid;grid-template-columns:96px minmax(180px,2.2fr) 1fr 1.1fr .9fr 1.2fr 1.4fr;align-items:center;gap:16px;padding:10px 16px;width:100%;text-align:left;position:relative;transition:background .15s}
+.lrow:hover{background:var(--fill-2)}
+.lrow+.lrow::before{content:'';position:absolute;top:0;left:128px;right:0;border-top:.5px solid var(--line)}
+.lhead{font-size:12px;color:var(--text-2);font-weight:500;padding-top:12px;padding-bottom:8px;cursor:default}
+.lhead:hover{background:none}
+.lthumb{position:relative;width:96px;height:72px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center}
+.lthumb img{position:relative;width:100%;height:100%;object-fit:contain}
+.lthumb .mono{font-size:22px;font-weight:700;color:var(--text-3)}
+.lthumb img~.mono{display:none}
+.lthumb .blur{inset:-12px;filter:blur(12px) saturate(1.3)}
+.lrow b{font-weight:600;letter-spacing:-.01em}
+.lrow .sub{font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .num{font-weight:500}
+.lrow .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:6px;vertical-align:1px}
+.lrow .st{font-size:13px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sh-title{padding:20px 0 4px}
 .sh-title h2{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
 .sh-title p{color:var(--text-2);margin-top:4px}
@@ -205,7 +241,10 @@ details summary::-webkit-details-marker{display:none}
 .skel{background:linear-gradient(90deg,var(--fill-2),var(--fill),var(--fill-2));background-size:200% 100%;animation:sk 1.4s infinite;border-radius:var(--r);height:300px}
 @keyframes sk{to{background-position:-200% 0}}
 
-@media (max-width:860px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:860px){.stats{grid-template-columns:repeat(2,1fr)}
+  .lrow{grid-template-columns:80px 1fr auto;gap:12px}.lrow .c-mkt,.lrow .c-loc,.lrow .c-st{display:none}
+  .lrow+.lrow::before{left:108px}.lthumb{width:80px;height:60px}.lhead{display:none}
+  .lrow .c-ask{text-align:right}.lrow .c-pct{grid-column:3;grid-row:1;align-self:end;display:none}}
 @media (max-width:600px){
   .bar-in,main{padding-left:16px;padding-right:16px}
   main{padding-top:20px}
@@ -223,6 +262,7 @@ details summary::-webkit-details-marker{display:none}
 <aside class="sheet" id="sheet" aria-modal="true" role="dialog"></aside>
 <div class="dlg" id="dlg"><div class="dlg-c" id="dlgc"></div></div>
 <div class="toast" id="toast"></div>
+<div class="lb" id="lb" onclick="if(event.target===this)closeLb()"></div>
 
 <script>
 const TABS = [
@@ -249,21 +289,25 @@ const EMPTY = {
   rejected: ['—', 'Nothing passed on', 'Cars outside your buying criteria show here.'],
 };
 
-let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null;
+let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null, view = 'grid', gi = 0;
+try { view = localStorage.getItem('c2t_view') || 'grid'; } catch {}
 let token = '';
 try { token = localStorage.getItem('c2t_admin') || ''; } catch {}
 
 // ── helpers ──
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const money = n => n == null || isNaN(n) ? '—' : '$' + Math.round(n).toLocaleString('en-AU');
+const money = n => n == null || isNaN(n) ? '—' : (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-AU');
 const kmFmt = n => n == null ? '— km' : Math.round(n).toLocaleString('en-AU') + ' km';
 const carName = l => [l.vehicle.year, l.vehicle.make, l.vehicle.model].filter(Boolean).join(' ');
 const stageLabel = k => meta?.stages.find(s => s.key === k)?.label || k;
 const stageStep = k => meta?.stages.find(s => s.key === k)?.step || 0;
 const flagLabel = f => ({ finance_owing: 'Finance owing', damaged: 'Possible damage', no_rego: 'No rego', swap_only: 'Swap', written_off: 'Written off', dealer: 'Dealer', not_car: 'Not a car' }[f] || f);
 const ago = iso => { const s = (Date.now() - new Date(iso)) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm ago' : s < 86400 ? Math.floor(s / 3600) + 'h ago' : Math.floor(s / 86400) + 'd ago'; };
-const photo = l => (l.photos || [])[0];
+const photos = l => (l.photos || []).filter(Boolean);
+const photo = l => photos(l)[0];
+// Whole photo, never cropped, with a blurred copy filling the spare space
+const pic = (src, cls = '') => src ? `<div class="blur" style="background-image:url('${esc(src)}')"></div><img ${cls} loading="lazy" src="${esc(src)}" alt="" referrerpolicy="no-referrer" onerror="this.previousElementSibling?.remove();this.remove()">` : '';
 const mono = l => esc((l.vehicle.make || '?').slice(0, 1));
 
 function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2600); }
@@ -327,8 +371,9 @@ function shell() {
     </section>
     <section class="stats" id="stats"></section>
     <div class="toolbar"><div class="seg" id="seg" role="tablist"></div>
-      <label class="sort">Sort by <select id="sort" onchange="sort=this.value;render()">
-        <option value="deal">Best deal</option><option value="new">Newest</option><option value="price">Lowest price</option><option value="km">Lowest km</option></select></label></div>
+      <div class="tools-r"><label class="sort">Sort by <select id="sort" onchange="sort=this.value;render()">
+        <option value="deal">Best deal</option><option value="new">Newest</option><option value="price">Lowest price</option><option value="km">Lowest km</option></select></label>
+        <div class="viewsw" role="group" aria-label="View"><button id="vg" onclick="setView('grid')" aria-label="Grid view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="6" height="6" rx="1.5"/><rect x="8" width="6" height="6" rx="1.5"/><rect y="8" width="6" height="6" rx="1.5"/><rect x="8" y="8" width="6" height="6" rx="1.5"/></svg></button><button id="vl" onclick="setView('list')" aria-label="List view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="14" height="2.4" rx="1.2"/><rect y="5.8" width="14" height="2.4" rx="1.2"/><rect y="11.6" width="14" height="2.4" rx="1.2"/></svg></button></div></div></div>
     <section class="grid" id="grid"></section>
   </main>`;
 }
@@ -369,7 +414,30 @@ function render() {
     $('grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ic">${ic}</div><h3>${esc(h3)}</h3><p>${esc(p)}</p></div>`;
     return;
   }
-  $('grid').innerHTML = rows.map(card).join('');
+  $('vg').classList.toggle('on', view === 'grid'); $('vl').classList.toggle('on', view === 'list');
+  if (view === 'list') {
+    $('grid').className = 'list';
+    $('grid').innerHTML = `<div class="lrow lhead"><span></span><span>Vehicle</span><span>Asking</span><span>Market</span><span>Below</span><span>Location</span><span>Status</span></div>` + rows.map(listRow).join('');
+  } else {
+    $('grid').className = 'grid';
+    $('grid').innerHTML = rows.map(card).join('');
+  }
+}
+
+function setView(v) { view = v; try { localStorage.setItem('c2t_view', v); } catch {} render(); }
+
+function listRow(l) {
+  const v = l.vehicle, mkt = l.valuation?.market, d = l.discountPct;
+  const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stageLabel(l.stage);
+  return `<button class="lrow" onclick="openLead('${l.id}')">
+    <span class="lthumb">${pic(photo(l))}<span class="mono">${mono(l)}</span></span>
+    <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([v.variant, kmFmt(v.km)].filter(Boolean).join(' · '))}</div></span>
+    <span class="num c-ask">${money(l.deal?.agreedPrice || l.askingPrice)}<div class="sub" style="font-weight:400">${l.deal?.agreedPrice ? 'Agreed' : ''}</div></span>
+    <span class="num c-mkt">${money(mkt)}<div class="sub" style="font-weight:400">${l.valuation?.method === 'ai' ? 'AI estimate' : l.valuation ? 'Market' : ''}</div></span>
+    <span class="c-pct">${d == null ? '<span class="sub">—</span>' : `<span class="badge ${d >= meta.criteria.minDiscountPct ? 'g' : d > 0 ? 'o' : 'n'}">${d}%</span>`}</span>
+    <span class="sub c-loc">${esc([l.location.suburb, l.location.state].filter(Boolean).join(', '))}</span>
+    <span class="st c-st">${l.alerts.length ? `<span style="color:var(--red)">⚠︎ ${esc(l.alerts[0])}</span>` : esc(status)}</span>
+  </button>`;
 }
 
 function dealBadge(l) {
@@ -385,7 +453,7 @@ function card(l) {
   const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stageLabel(l.stage);
   const last = (l.thread || []).slice(-1)[0];
   return `<button class="card" onclick="openLead('${l.id}')">
-    <div class="ph">${photo(l) ? `<img loading="lazy" src="${esc(photo(l))}" alt="" onerror="this.remove()">` : ''}<span class="mono">${mono(l)}</span>
+    <div class="ph">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="badge n" style="position:absolute;top:auto;left:auto;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff">${photos(l).length} photos</span>` : ''}
       <div style="position:absolute;top:12px;left:12px">${dealBadge(l)}</div>
       ${l.unread ? '<span class="unread">New reply</span>' : ''}</div>
     <div class="cb">
@@ -404,6 +472,7 @@ function setTab(k) { tab = k; render(); window.scrollTo({ top: $('seg').offsetTo
 // ── detail sheet ──
 async function openLead(id) {
   current = await api('/api/leads/' + id);
+  gi = 0;
   draw();
   $('sheet').classList.add('on'); $('scrim').classList.add('on');
   document.body.style.overflow = 'hidden';
@@ -427,7 +496,7 @@ function draw() {
   h.push(`<div class="sh-head"><button class="x" onclick="closeLead()" aria-label="Close">✕</button><span class="t">${esc(carName(l))}</span>
     ${l.url ? `<a class="link" href="${esc(l.url)}" target="_blank" rel="noopener">Listing ↗</a>` : ''}</div><div class="sh-body">`);
 
-  h.push(`<div class="sh-hero">${photo(l) ? `<img src="${esc(photo(l))}" alt="" onerror="this.remove()">` : ''}<span class="mono">${mono(l)}</span></div>
+  h.push(`${gallery(l)}
     <div class="sh-title"><h2>${esc(carName(l))}</h2><p>${esc([v.variant, kmFmt(v.km), [l.location.suburb, l.location.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</p>
     <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${dealBadge(l)}${l.flags.map(f => `<span class="badge ${f === 'written_off' || f === 'dealer' ? 'r' : 'o'}">${flagLabel(f)}</span>`).join('')}</div></div>`);
 
@@ -549,6 +618,46 @@ function draw() {
   $('sheet').querySelector('.sh-body').scrollTop = scroll;
   smsLen();
 }
+
+// ── photos: gallery in the sheet + full-screen viewer ──
+function gallery(l) {
+  const ps = photos(l);
+  if (gi >= ps.length) gi = 0;
+  return `<div class="gal" id="gal" onclick="openLb()">${pic(ps[gi], 'class="main"')}<span class="mono">${mono(l)}</span>
+      ${ps.length > 1 ? `<button class="nav p" onclick="event.stopPropagation();step(-1)" aria-label="Previous photo">‹</button><button class="nav n" onclick="event.stopPropagation();step(1)" aria-label="Next photo">›</button><span class="cnt">${gi + 1} / ${ps.length}</span>` : ''}</div>
+    ${ps.length > 1 ? `<div class="thumbs">${ps.map((p, i) => `<button class="${i === gi ? 'on' : ''}" onclick="gi=${i};redrawGal()" aria-label="Photo ${i + 1}"><img loading="lazy" src="${esc(p)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()"></button>`).join('')}</div>` : ''}`;
+}
+function redrawGal() {
+  const g = $('gal'); if (!g) return;
+  const wrap = document.createElement('div'); wrap.innerHTML = gallery(current);
+  const th = g.nextElementSibling?.classList.contains('thumbs') ? g.nextElementSibling : null;
+  if (th) th.replaceWith(wrap.children[1]);
+  g.replaceWith(wrap.children[0]);
+  if ($('lb')?.classList.contains('on')) drawLb();
+}
+function step(d) { const n = photos(current).length; if (n < 2) return; gi = (gi + d + n) % n; redrawGal(); }
+function openLb() { if (!photos(current).length) return; drawLb(); $('lb').classList.add('on'); }
+function closeLb() { $('lb').classList.remove('on'); }
+function drawLb() {
+  const ps = photos(current);
+  $('lb').innerHTML = `<button class="x" onclick="closeLb()" aria-label="Close">✕</button><img src="${esc(ps[gi])}" alt="" referrerpolicy="no-referrer">
+    ${ps.length > 1 ? `<button class="nav p" onclick="step(-1)" aria-label="Previous">‹</button><button class="nav n" onclick="step(1)" aria-label="Next">›</button><span class="cnt">${gi + 1} / ${ps.length}</span>` : ''}`;
+}
+document.addEventListener('keydown', e => {
+  if (!current) return;
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'Escape' && $('lb').classList.contains('on')) { e.stopImmediatePropagation(); closeLb(); }
+}, true);
+
+// Swipe left/right on the gallery or viewer
+let tx = null;
+document.addEventListener('touchstart', e => { if (e.target.closest('#gal,#lb')) tx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  if (tx == null) return;
+  const dx = e.changedTouches[0].clientX - tx; tx = null;
+  if (Math.abs(dx) > 40) { step(dx < 0 ? 1 : -1); e.preventDefault(); }
+});
 
 function smsLen() { const s = $('sms'), o = $('smslen'); if (s && o) o.textContent = `${s.value.length} · ${Math.ceil(s.value.length / 153) || 1} SMS`; }
 function pickCh(b) { b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }
