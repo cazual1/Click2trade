@@ -41,6 +41,15 @@ const BIKE_MAKES = ['yamaha', 'beta', 'ktm', 'kawasaki', 'ducati', 'harley-david
 const TWO_WORD_MODELS = { 'landcruiser prado': 'Prado', 'land cruiser': 'LandCruiser', 'model y': 'Model Y', 'model 3': 'Model 3', 'model s': 'Model S', 'model x': 'Model X', 'yaris cross': 'Yaris Cross', 'cx 3': 'CX-3', 'cx 30': 'CX-30', 'cx 5': 'CX-5', 'cx 60': 'CX-60', 'cx 8': 'CX-8', 'cx 9': 'CX-9', 'mg 4': 'MG4', 'mg 5': 'MG5' };
 const MODEL_NAMES = { cx60: 'CX-60', cx5: 'CX-5', cx30: 'CX-30', cx3: 'CX-3', cx8: 'CX-8', cx9: 'CX-9', hilux: 'HiLux', rav4: 'RAV4', 'x-trail': 'X-Trail', 'd-max': 'D-Max', 'bt-50': 'BT-50', 'mx-5': 'MX-5', 'cr-v': 'CR-V', 'hr-v': 'HR-V', hrv: 'HR-V', crv: 'CR-V', landcruiser: 'LandCruiser', 't-roc': 'T-Roc', mg4: 'MG4', mg5: 'MG5', mg3: 'MG3', zst: 'ZST', zs: 'ZS', i30n: 'i30 N', i30: 'i30', y: 'Model Y' };
 
+// A variant is a trim like "GXL Hybrid" or "Sportback S line", not a sentence from the description
+export function cleanVariant(v) {
+  if (!v) return null;
+  const t = String(v).replace(/\s+/g, ' ').trim();
+  if (!t || t.length > 40 || t.split(' ').length > 6) return null;
+  if (/[:!?…]|\.\.|\b(?:selling|regret|mileage|kms?|condition|owner|negotiable|price|immaculate|excellent|stunning|beautiful|perfect|(?:19|20)\d\d)\b|\d{2,3},?\d{3}\s*km/i.test(t)) return null;
+  return t;
+}
+
 const titleCase = s => s && s === s.toLowerCase() ? s.replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase()) : s;
 
 function splitModel(rawModel, make, rawVariant) {
@@ -185,7 +194,7 @@ export function normaliseListing(raw, source = 'facebook_marketplace') {
       year: toNumber(raw.year) || fromTitle.year || null,
       make,
       model,
-      variant,
+      variant: cleanVariant(variant),
       km: toNumber(raw.odometer_km ?? raw.km ?? raw.mileage ?? raw.odometer),
       condition: parseCondition(raw.condition, text),
       bodyType: raw.body_type || null,

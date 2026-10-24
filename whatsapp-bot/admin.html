@@ -136,16 +136,22 @@ button.stat:hover{transform:translateY(-2px)}
 .ct i{font-style:normal;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--green-tint);color:var(--green)}
 .ct i.m{background:var(--fill);color:var(--text-2)}
 .list{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-.lrow{display:grid;grid-template-columns:96px minmax(180px,2.2fr) 1fr 1.1fr .9fr 1.2fr 1.4fr;align-items:center;gap:16px;padding:10px 16px;width:100%;text-align:left;position:relative;transition:background .15s}
+.lrow{display:grid;grid-template-columns:176px minmax(180px,2.2fr) 1fr 1.1fr .9fr 1.2fr 1.4fr;align-items:center;gap:16px;padding:10px 16px;width:100%;text-align:left;position:relative;transition:background .15s}
 .lrow:hover{background:var(--fill-2)}
-.lrow+.lrow::before{content:'';position:absolute;top:0;left:128px;right:0;border-top:.5px solid var(--line)}
+.lrow+.lrow::before{content:'';position:absolute;top:0;left:208px;right:0;border-top:.5px solid var(--line)}
 .lhead{font-size:12px;color:var(--text-2);font-weight:500;padding-top:12px;padding-bottom:8px;cursor:default}
 .lhead:hover{background:none}
-.lthumb{position:relative;width:96px;height:72px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center}
+.lthumb{position:relative;width:176px;height:132px;border-radius:12px;overflow:hidden;cursor:zoom-in;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center}
 .lthumb img{position:relative;width:100%;height:100%;object-fit:contain}
 .lthumb .mono{font-size:22px;font-weight:700;color:var(--text-3)}
 .lthumb img~.mono{display:none}
 .lthumb .blur{inset:-12px;filter:blur(12px) saturate(1.3)}
+.lthumb .pc{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px}
+.ph{cursor:zoom-in}
+#pv{position:fixed;z-index:30;width:min(560px,45vw);aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#000;box-shadow:var(--shadow-lg);pointer-events:none;opacity:0;transform:scale(.97);transition:opacity .15s,transform .15s;display:grid;place-items:center}
+#pv.on{opacity:1;transform:none}
+#pv img{position:relative;width:100%;height:100%;object-fit:contain}
+@media (hover:none){#pv{display:none}}
 .lrow b{font-weight:600;letter-spacing:-.01em}
 .lrow .sub{font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lrow .num{font-weight:500}
@@ -248,8 +254,8 @@ details summary::-webkit-details-marker{display:none}
 @keyframes sk{to{background-position:-200% 0}}
 
 @media (max-width:860px){.stats{grid-template-columns:repeat(2,1fr)}
-  .lrow{grid-template-columns:80px 1fr auto;gap:12px}.lrow .c-mkt,.lrow .c-loc,.lrow .c-st{display:none}
-  .lrow+.lrow::before{left:108px}.lthumb{width:80px;height:60px}.lhead{display:none}
+  .lrow{grid-template-columns:120px 1fr auto;gap:12px}.lrow .c-mkt,.lrow .c-loc,.lrow .c-st{display:none}
+  .lrow+.lrow::before{left:144px}.lthumb{width:120px;height:90px}.lhead{display:none}
   .lrow .c-ask{text-align:right}.lrow .c-pct{grid-column:3;grid-row:1;align-self:end;display:none}}
 @media (max-width:600px){
   .bar-in,main{padding-left:16px;padding-right:16px}
@@ -269,6 +275,7 @@ details summary::-webkit-details-marker{display:none}
 <div class="dlg" id="dlg"><div class="dlg-c" id="dlgc"></div></div>
 <div class="toast" id="toast"></div>
 <div class="lb" id="lb" onclick="if(event.target===this)closeLb()"></div>
+<div id="pv"></div>
 
 <script>
 const TABS = [
@@ -308,6 +315,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = n => n == null || isNaN(n) ? '—' : (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-AU');
 const kmFmt = n => n == null ? '— km' : Math.round(n).toLocaleString('en-AU') + ' km';
+const variantOf = l => { const t = (l.vehicle.variant || '').trim(); return !t || t.length > 40 || t.split(' ').length > 6 || /[:!?…]|\.\.|\b(selling|regret|mileage|kms?|condition|owner|negotiable|price|immaculate|excellent|stunning|beautiful|perfect|(19|20)\d\d)\b/i.test(t) ? '' : t; };
 const carName = l => [l.vehicle.year, l.vehicle.make, l.vehicle.model].filter(Boolean).join(' ');
 const stageLabel = k => meta?.stages.find(s => s.key === k)?.label || k;
 const stageStep = k => meta?.stages.find(s => s.key === k)?.step || 0;
@@ -445,8 +453,8 @@ function listRow(l) {
   const v = l.vehicle, mkt = l.valuation?.market, d = l.discountPct;
   const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stageLabel(l.stage);
   return `<button class="lrow" onclick="openLead('${l.id}')">
-    <span class="lthumb">${pic(photo(l))}<span class="mono">${mono(l)}</span></span>
-    <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([v.variant, kmFmt(v.km)].filter(Boolean).join(' · '))}</div><div style="margin-top:3px">${contactTags(l)}</div></span>
+    <span class="lthumb" onclick="event.stopPropagation();viewPhotos('${l.id}')" onmouseenter="showPv(event,'${l.id}')" onmousemove="movePv(event)" onmouseleave="hidePv()">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="pc">${photos(l).length}</span>` : ''}</span>
+    <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([variantOf(l), kmFmt(v.km)].filter(Boolean).join(' · '))}</div><div style="margin-top:3px">${contactTags(l)}</div></span>
     <span class="num c-ask">${money(l.deal?.agreedPrice || l.askingPrice)}<div class="sub" style="font-weight:400">${l.deal?.agreedPrice ? 'Agreed' : ''}</div></span>
     <span class="num c-mkt">${money(mkt)}<div class="sub" style="font-weight:400">${l.valuation?.method === 'ai' ? 'AI estimate' : l.valuation ? 'Market' : ''}</div></span>
     <span class="c-pct">${d == null ? '<span class="sub">—</span>' : `<span class="badge ${d >= meta.criteria.minDiscountPct ? 'g' : d > 0 ? 'o' : 'n'}">${d}%</span>`}</span>
@@ -468,11 +476,11 @@ function card(l) {
   const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stageLabel(l.stage);
   const last = (l.thread || []).slice(-1)[0];
   return `<button class="card" onclick="openLead('${l.id}')">
-    <div class="ph">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="badge n" style="position:absolute;top:auto;left:auto;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff">${photos(l).length} photos</span>` : ''}
+    <div class="ph" onclick="event.stopPropagation();viewPhotos('${l.id}')">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="badge n" style="position:absolute;top:auto;left:auto;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff">${photos(l).length} photos</span>` : ''}
       <div style="position:absolute;top:12px;left:12px">${dealBadge(l)}</div>
       ${l.unread ? '<span class="unread">New reply</span>' : ''}</div>
     <div class="cb">
-      <div><h3>${esc(carName(l))}</h3><div class="sub">${esc(v.variant || '')}${v.variant ? ' · ' : ''}${kmFmt(v.km)}${v.condition && v.condition !== 'Unknown' ? ' · ' + esc(v.condition) : ''}</div></div>
+      <div><h3>${esc(carName(l))}</h3><div class="sub">${esc(variantOf(l))}${variantOf(l) ? ' · ' : ''}${kmFmt(v.km)}${v.condition && v.condition !== 'Unknown' ? ' · ' + esc(v.condition) : ''}</div></div>
       <div class="prices"><span class="ask num">${money(l.deal?.agreedPrice || l.askingPrice)}</span><span class="mkt num">${l.deal?.agreedPrice ? 'Agreed' : mkt ? (l.valuation.method === 'ai' ? 'AI est. ' : 'Market ') + money(mkt) : ''}</span></div>
       ${mkt ? `<div class="meter"><b style="width:${pct}%"></b></div>` : ''}
       ${l.alerts.map(a => `<div class="alert">⚠︎ ${esc(a)}</div>`).join('')}
@@ -513,7 +521,7 @@ function draw() {
     ${l.url ? `<a class="link" href="${esc(l.url)}" target="_blank" rel="noopener">Listing ↗</a>` : ''}</div><div class="sh-body">`);
 
   h.push(`${gallery(l)}
-    <div class="sh-title"><h2>${esc(carName(l))}</h2><p>${esc([v.variant, kmFmt(v.km), [l.location.suburb, l.location.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</p>
+    <div class="sh-title"><h2>${esc(carName(l))}</h2><p>${esc([variantOf(l), kmFmt(v.km), [l.location.suburb, l.location.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</p>
     <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${dealBadge(l)}${l.flags.map(f => `<span class="badge ${f === 'written_off' || f === 'dealer' ? 'r' : 'o'}">${flagLabel(f)}</span>`).join('')}</div></div>`);
 
   h.push(`<div class="deal-box">
@@ -653,7 +661,26 @@ function redrawGal() {
 }
 function step(d) { const n = photos(current).length; if (n < 2) return; gi = (gi + d + n) % n; redrawGal(); }
 function openLb() { if (!photos(current).length) return; drawLb(); $('lb').classList.add('on'); }
-function closeLb() { $('lb').classList.remove('on'); }
+function closeLb() { $('lb').classList.remove('on'); if (!$('sheet').classList.contains('on')) current = null; }
+// Open the full-screen viewer straight from a card or list row
+function viewPhotos(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l || !photos(l).length) return openLead(id);
+  hidePv(); current = l; gi = 0; openLb();
+}
+// Large preview while hovering a list thumbnail (desktop)
+function showPv(e, id) {
+  const l = leads.find(x => x.id === id); if (!l || !photo(l)) return;
+  $('pv').innerHTML = pic(photo(l)); $('pv').classList.add('on'); movePv(e);
+}
+function movePv(e) {
+  const pv = $('pv'), w = pv.offsetWidth, h = pv.offsetHeight;
+  let x = e.clientX + 24, y = e.clientY - h / 2;
+  if (x + w > innerWidth - 12) x = e.clientX - w - 24;
+  y = Math.max(12, Math.min(y, innerHeight - h - 12));
+  pv.style.left = x + 'px'; pv.style.top = y + 'px';
+}
+function hidePv() { $('pv').classList.remove('on'); }
 function drawLb() {
   const ps = photos(current);
   $('lb').innerHTML = `<button class="x" onclick="closeLb()" aria-label="Close">✕</button><img src="${esc(ps[gi])}" alt="" referrerpolicy="no-referrer">
