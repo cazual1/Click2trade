@@ -128,7 +128,13 @@ button.stat:hover{transform:translateY(-2px)}
 .viewsw{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px}
 .viewsw button{width:34px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--text-2)}
 .viewsw button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.tools-r{display:flex;align-items:center;gap:14px}
+.tools-r{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.fchip{height:32px;padding:0 13px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;color:var(--text);transition:background .2s,color .2s}
+.fchip.on{background:var(--blue);color:#fff}
+.fchip .c{opacity:.65;font-weight:400}
+.ct{display:inline-flex;gap:4px}
+.ct i{font-style:normal;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--green-tint);color:var(--green)}
+.ct i.m{background:var(--fill);color:var(--text-2)}
 .list{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .lrow{display:grid;grid-template-columns:96px minmax(180px,2.2fr) 1fr 1.1fr .9fr 1.2fr 1.4fr;align-items:center;gap:16px;padding:10px 16px;width:100%;text-align:left;position:relative;transition:background .15s}
 .lrow:hover{background:var(--fill-2)}
@@ -289,8 +295,11 @@ const EMPTY = {
   rejected: ['—', 'Nothing passed on', 'Cars outside your buying criteria show here.'],
 };
 
-let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null, view = 'grid', gi = 0;
-try { view = localStorage.getItem('c2t_view') || 'grid'; } catch {}
+let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null, view = 'grid', gi = 0, contactOnly = false;
+try { view = localStorage.getItem('c2t_view') || 'grid'; contactOnly = localStorage.getItem('c2t_contact') === '1'; } catch {}
+const hasContact = l => !!(l.seller.phone || l.seller.email);
+// Small "Phone" / "Email" / "Marketplace" tags so you can see how each seller can be reached
+const contactTags = l => `<span class="ct">${l.seller.phone ? '<i>Phone</i>' : ''}${l.seller.email ? '<i>Email</i>' : ''}${!hasContact(l) ? '<i class="m">Marketplace only</i>' : ''}</span>`;
 let token = '';
 try { token = localStorage.getItem('c2t_admin') || ''; } catch {}
 
@@ -371,7 +380,7 @@ function shell() {
     </section>
     <section class="stats" id="stats"></section>
     <div class="toolbar"><div class="seg" id="seg" role="tablist"></div>
-      <div class="tools-r"><label class="sort">Sort by <select id="sort" onchange="sort=this.value;render()">
+      <div class="tools-r"><button class="fchip" id="fc" onclick="toggleContact()" aria-pressed="false">With phone or email<span class="c" id="fcn"></span></button><label class="sort">Sort by <select id="sort" onchange="sort=this.value;render()">
         <option value="deal">Best deal</option><option value="new">Newest</option><option value="price">Lowest price</option><option value="km">Lowest km</option></select></label>
         <div class="viewsw" role="group" aria-label="View"><button id="vg" onclick="setView('grid')" aria-label="Grid view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="6" height="6" rx="1.5"/><rect x="8" width="6" height="6" rx="1.5"/><rect y="8" width="6" height="6" rx="1.5"/><rect x="8" y="8" width="6" height="6" rx="1.5"/></svg></button><button id="vl" onclick="setView('list')" aria-label="List view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="14" height="2.4" rx="1.2"/><rect y="5.8" width="14" height="2.4" rx="1.2"/><rect y="11.6" width="14" height="2.4" rx="1.2"/></svg></button></div></div></div>
     <section class="grid" id="grid"></section>
@@ -400,6 +409,9 @@ function render() {
 
   const t = TABS.find(t => t.key === tab);
   let rows = leads.filter(l => t.stages.includes(l.stage));
+  $('fcn').textContent = rows.filter(hasContact).length;
+  $('fc').classList.toggle('on', contactOnly); $('fc').setAttribute('aria-pressed', contactOnly);
+  if (contactOnly) rows = rows.filter(hasContact);
   if (query) rows = rows.filter(l => [carName(l), l.vehicle.variant, l.seller.name, l.location.suburb, l.location.state].join(' ').toLowerCase().includes(query));
   const sorters = {
     deal: (a, b) => (b.discountPct ?? -999) - (a.discountPct ?? -999),
@@ -410,7 +422,8 @@ function render() {
   rows.sort((a, b) => (b.unread ? 1 : 0) - (a.unread ? 1 : 0) || sorters[sort](a, b));
 
   if (!rows.length) {
-    const [ic, h3, p] = query ? ['🔍', 'No results', `Nothing matches “${query}”.`] : EMPTY[tab];
+    const [ic, h3, p] = query ? ['🔍', 'No results', `Nothing matches “${query}”.`]
+      : contactOnly ? ['📵', 'No sellers with contact info here', 'Turn off “With phone or email” to see every car.'] : EMPTY[tab];
     $('grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ic">${ic}</div><h3>${esc(h3)}</h3><p>${esc(p)}</p></div>`;
     return;
   }
@@ -424,6 +437,8 @@ function render() {
   }
 }
 
+function toggleContact() { contactOnly = !contactOnly; try { localStorage.setItem('c2t_contact', contactOnly ? '1' : '0'); } catch {} render(); }
+
 function setView(v) { view = v; try { localStorage.setItem('c2t_view', v); } catch {} render(); }
 
 function listRow(l) {
@@ -431,7 +446,7 @@ function listRow(l) {
   const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stageLabel(l.stage);
   return `<button class="lrow" onclick="openLead('${l.id}')">
     <span class="lthumb">${pic(photo(l))}<span class="mono">${mono(l)}</span></span>
-    <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([v.variant, kmFmt(v.km)].filter(Boolean).join(' · '))}</div></span>
+    <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([v.variant, kmFmt(v.km)].filter(Boolean).join(' · '))}</div><div style="margin-top:3px">${contactTags(l)}</div></span>
     <span class="num c-ask">${money(l.deal?.agreedPrice || l.askingPrice)}<div class="sub" style="font-weight:400">${l.deal?.agreedPrice ? 'Agreed' : ''}</div></span>
     <span class="num c-mkt">${money(mkt)}<div class="sub" style="font-weight:400">${l.valuation?.method === 'ai' ? 'AI estimate' : l.valuation ? 'Market' : ''}</div></span>
     <span class="c-pct">${d == null ? '<span class="sub">—</span>' : `<span class="badge ${d >= meta.criteria.minDiscountPct ? 'g' : d > 0 ? 'o' : 'n'}">${d}%</span>`}</span>
@@ -462,6 +477,7 @@ function card(l) {
       ${mkt ? `<div class="meter"><b style="width:${pct}%"></b></div>` : ''}
       ${l.alerts.map(a => `<div class="alert">⚠︎ ${esc(a)}</div>`).join('')}
       ${last && tab === 'talking' ? `<div class="sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${last.dir === 'in' ? '' : 'You: '}${esc(last.body)}</div>` : ''}
+      ${contactTags(l)}
       <div class="foot"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(status)}</span>
         <span class="flags">${l.flags.filter(f => f !== 'written_off' && f !== 'dealer').slice(0, 2).map(f => `<span class="badge o">${flagLabel(f)}</span>`).join('')}</span></div>
     </div></button>`;
