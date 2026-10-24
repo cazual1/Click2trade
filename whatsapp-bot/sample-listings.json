@@ -1,0 +1,329 @@
+{
+ "source": "facebook_marketplace",
+ "scraped_at": "2026-10-24T06:00:00Z",
+ "listings": [
+  {
+   "listing_id": "fb1",
+   "url": "https://www.facebook.com/marketplace/item/1001",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 39593,
+   "odometer_km": 31001,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 1",
+    "phone": "0412 345 101",
+    "email": "seller1@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/1"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb2",
+   "url": "https://www.facebook.com/marketplace/item/1002",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 39663,
+   "odometer_km": 43196,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 2",
+    "phone": "0412 345 102",
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/2"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb3",
+   "url": "https://www.facebook.com/marketplace/item/1003",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 37905,
+   "odometer_km": 59569,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 3",
+    "phone": null,
+    "email": "seller3@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/3"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb4",
+   "url": "https://www.facebook.com/marketplace/item/1004",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 39051,
+   "odometer_km": 37834,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 4",
+    "phone": "0412 345 104",
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/4"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb5",
+   "url": "https://www.facebook.com/marketplace/item/1005",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 39800,
+   "odometer_km": 45675,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 5",
+    "phone": "0412 345 105",
+    "email": "seller5@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/5"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb6",
+   "url": "https://www.facebook.com/marketplace/item/1006",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 37714,
+   "odometer_km": 31486,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 6",
+    "phone": null,
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/6"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb7",
+   "url": "https://www.facebook.com/marketplace/item/1007",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 37950,
+   "odometer_km": 56343,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 7",
+    "phone": "0412 345 107",
+    "email": "seller7@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/7"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb8",
+   "url": "https://www.facebook.com/marketplace/item/1008",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 38358,
+   "odometer_km": 37706,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 8",
+    "phone": "0412 345 108",
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/8"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb9",
+   "url": "https://www.facebook.com/marketplace/item/1009",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 31500,
+   "odometer_km": 42000,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 9",
+    "phone": null,
+    "email": "seller9@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/9"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb10",
+   "url": "https://www.facebook.com/marketplace/item/1010",
+   "title": "2023 Mazda CX-5 Maxx Sport",
+   "price": 35399,
+   "odometer_km": 34815,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 10",
+    "phone": "0412 345 110",
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/10"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb11",
+   "url": "https://www.facebook.com/marketplace/item/1011",
+   "title": "2023 Mazda CX-5 Maxx Sport",
+   "price": 34630,
+   "odometer_km": 19307,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 11",
+    "phone": "0412 345 111",
+    "email": "seller11@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/11"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb12",
+   "url": "https://www.facebook.com/marketplace/item/1012",
+   "title": "2023 Mazda CX-5 Maxx Sport",
+   "price": 35447,
+   "odometer_km": 22037,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 12",
+    "phone": null,
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/12"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb13",
+   "url": "https://www.facebook.com/marketplace/item/1013",
+   "title": "2023 Mazda CX-5 Maxx Sport",
+   "price": 35626,
+   "odometer_km": 18514,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 13",
+    "phone": "0412 345 113",
+    "email": "seller13@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/13"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb14",
+   "url": "https://www.facebook.com/marketplace/item/1014",
+   "title": "2023 Mazda CX-5 Maxx Sport",
+   "price": 34068,
+   "odometer_km": 24505,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 14",
+    "phone": "0412 345 114",
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/14"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb15",
+   "url": "https://www.facebook.com/marketplace/item/1015",
+   "title": "2023 Mazda CX-5 Maxx Sport",
+   "price": 29990,
+   "odometer_km": 22000,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 15",
+    "phone": null,
+    "email": "seller15@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/15"
+   },
+   "description": "Finance owing, will pay out on sale",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb16",
+   "url": "https://www.facebook.com/marketplace/item/1016",
+   "title": "2019 Ford Ranger XLT",
+   "price": 30000,
+   "odometer_km": 90000,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 16",
+    "phone": "0412 345 116",
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/16"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb17",
+   "url": "https://www.facebook.com/marketplace/item/1017",
+   "title": "2022 Toyota HiLux SR5",
+   "price": 40000,
+   "odometer_km": 120000,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 17",
+    "phone": "0412 345 117",
+    "email": "seller17@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/17"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb18",
+   "url": "https://www.facebook.com/marketplace/item/1018",
+   "title": "2024 Kia Sportage GT-Line",
+   "price": 38000,
+   "odometer_km": 8000,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 18",
+    "phone": null,
+    "email": null,
+    "profile_url": "https://www.facebook.com/marketplace/profile/18"
+   },
+   "description": "One owner, full service history.",
+   "listed_at": "2026-10-23T09:00:00Z"
+  },
+  {
+   "listing_id": "fb19",
+   "url": "https://www.facebook.com/marketplace/item/1019",
+   "title": "2022 Toyota RAV4 GX",
+   "price": 28000,
+   "odometer_km": 40000,
+   "condition": "Good",
+   "location": "Parramatta, NSW 2150",
+   "seller": {
+    "name": "Seller 19",
+    "phone": "0412 345 119",
+    "email": "seller19@example.com",
+    "profile_url": "https://www.facebook.com/marketplace/profile/19"
+   },
+   "description": "Repairable write off, WOVR listed",
+   "listed_at": "2026-10-23T09:00:00Z"
+  }
+ ]
+}

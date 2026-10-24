@@ -2,6 +2,45 @@
 
 AI-powered car selling assistant via WhatsApp. Users text in their car details, get an instant valuation, then the AI agent contacts dealers and negotiates the best price.
 
+The same server also runs the **acquisition pipeline**: buying under-market cars from private sellers.
+
+## Acquisition pipeline
+
+```
+Scraping agent (daily) ──POST /api/listings/ingest──▶ normalise ─▶ buy criteria ─▶ valuation ─▶ approval queue
+                                                     (listings.mjs)  (≤5yr, ≤80k km)  (valuation.mjs)   /admin
+                                                                                                          │ approve
+Seller SMS / email replies ◀──────────── Twilio SMS / Resend email ◀──────────────────────────────────────┘
+   /sms-inbound, /inbound-email ──▶ conversation thread + AI-suggested replies ──▶ deal pipeline (steps 4–16)
+```
+
+| Step | Where |
+|------|-------|
+| 1. Scan platforms | The scraping agent. Feed format is in [LISTING_FEED.md](LISTING_FEED.md) |
+| 2. Find under-market cars | `listings.mjs` filters (age, km, write-offs, dealers); `valuation.mjs` estimates market value (AutoGrab, else comparable listings, else manual) |
+| 3. Intro email / SMS | Drafted automatically, sent only after you approve it in `/admin` |
+| 4–5. Negotiate, agree | Conversation thread in `/admin`, "AI suggest" drafts replies (never auto-sent), record max buy and agreed price |
+| 6–7. Agreement, inspection | Deal fields in `/admin` |
+| 8. Documents | Checklist: rego, licence and bank details; GST tax invoice if company-owned; payout letter, checked to be valid ≥14 days past the sale date, if finance is owing |
+| 9–16. DMS → on-sell → pay → invoice → transport → dealer payment → delivered | Stage tracking with guards: no stage past 8 until documents are complete, no seller payment until a buying dealer is recorded, alert when dealer payment is over 72h past the invoice |
+
+Run it:
+```bash
+cp .env.example .env    # set INGEST_API_KEY, ADMIN_TOKEN, Twilio SMS number, Resend, dealer licence
+npm run dev
+npm run ingest -- sample-listings.json   # load the sample feed
+open http://localhost:3000/admin          # enter ADMIN_TOKEN
+```
+
+Webhooks to configure:
+- Twilio SMS number → "A message comes in" → `POST https://<server>/sms-inbound`
+- Resend inbound (domain `INBOUND_DOMAIN`) → `POST https://<server>/inbound-email`. Seller replies come to `lead-<id>@...`, dealer quotes to `quote-...@...`
+
+Storage: Supabase `leads` / `suppressions` tables (schema at the top of `store.mjs`) if `SUPABASE_URL` is set, otherwise `data/leads.json`.
+On Railway/Render the local disk is wiped on redeploy, so use Supabase or a persistent volume in production.
+
+Compliance: intro messages identify the business and dealer licence and carry an opt-out. STOP/unsubscribe replies are suppressed permanently (Spam Act 2003).
+
 ## Architecture
 
 ```

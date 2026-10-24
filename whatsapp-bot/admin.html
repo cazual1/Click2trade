@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Click2Trade — Acquisitions</title>
+<style>
+:root{--bg:#0b0b0d;--panel:#16161a;--line:#2a2a30;--text:#f2f2f5;--muted:#8a8a93;--accent:#0a84ff;--good:#30d158;--warn:#ff9f0a;--bad:#ff453a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:17px;font-weight:600}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font:inherit}
+nav button.on{color:var(--text);border-color:var(--line);background:var(--panel)}
+nav .n{display:inline-block;min-width:18px;margin-left:6px;padding:0 5px;border-radius:9px;background:var(--line);font-size:11px;color:var(--text)}
+main{padding:16px 20px;max-width:1300px;margin:0 auto}
+.crit{color:var(--muted);font-size:12px;margin-left:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:500}
+tr.row{cursor:pointer}tr.row:hover td{background:var(--panel)}
+.muted{color:var(--muted)}.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;background:var(--line);margin:1px 2px 1px 0}
+.tag.warn{background:rgba(255,159,10,.18)}.tag.bad{background:rgba(255,69,58,.18)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px}
+button.btn{background:var(--accent);color:#fff;border:0;padding:7px 14px;border-radius:8px;cursor:pointer;font:inherit;font-weight:500}
+button.btn.ghost{background:var(--line);color:var(--text)}button.btn.bad{background:var(--bad)}
+button.btn:disabled{opacity:.4;cursor:default}
+input,textarea,select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:inherit}
+textarea{min-height:90px;resize:vertical}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(760px,100%);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;transform:translateX(100%);transition:transform .2s;padding:20px;z-index:5}
+#drawer.open{transform:none}
+#drawer h2{font-size:19px;margin-bottom:2px}
+.sec{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
+.sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px 14px}
+.kv b{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.msg{padding:8px 10px;border-radius:8px;margin:6px 0;max-width:85%;white-space:pre-wrap}
+.msg.out{background:rgba(10,132,255,.15);margin-left:auto}.msg.in{background:var(--line)}
+.msg small{display:block;color:var(--muted);font-size:11px;margin-bottom:2px}
+.check{display:flex;gap:8px;align-items:center;margin:5px 0}.check input{width:auto}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:10px 16px;border-radius:10px;display:none;z-index:9}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.close{float:right;background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer}
+@media (prefers-color-scheme:light){:root{--bg:#f5f5f7;--panel:#fff;--line:#e3e3e8;--text:#1d1d1f;--muted:#6e6e73}}
+@media (max-width:700px){.hide-sm{display:none}main,header{padding-left:12px;padding-right:12px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Click2Trade Acquisitions</h1>
+  <nav id="tabs"></nav>
+  <span class="crit" id="crit"></span>
+</header>
+<main id="list"></main>
+<aside id="drawer"></aside>
+<div id="toast"></div>
+
+<script>
+const TABS = [
+  { key: 'approve', label: 'Approve', stages: ['draft'] },
+  { key: 'value', label: 'Needs valuation', stages: ['needs_valuation'] },
+  { key: 'talking', label: 'Contacted', stages: ['contacted', 'negotiating'] },
+  { key: 'deals', label: 'Deals', stages: ['agreed','agreement_sent','inspection','documents','dms_loaded','selling','seller_paid','in_stock','invoiced','transport','payment_received'] },
+  { key: 'done', label: 'Completed', stages: ['delivered'] },
+  { key: 'rejected', label: 'Rejected', stages: ['rejected', 'lost', 'opted_out'] },
+];
+let tab = 'approve', leads = [], meta = null, current = null;
+
+let token = '';
+try { token = localStorage.getItem('c2t_admin') || ''; } catch {}
+if (!token) {
+  token = prompt('Admin token') || '';
+  try { localStorage.setItem('c2t_admin', token); } catch {}
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { try { localStorage.removeItem('c2t_admin'); } catch {} toast('Bad token — reload to re-enter'); throw new Error('unauthorised'); }
+  if (!res.ok) { toast(data.error || 'Error ' + res.status); throw new Error(data.error); }
+  return data;
+}
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(el._t); el._t = setTimeout(() => el.style.display = 'none', 3500); }
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => n == null ? '—' : 'A$' + Math.round(n).toLocaleString();
+const car = l => [l.vehicle.year, l.vehicle.make, l.vehicle.model, l.vehicle.variant].filter(Boolean).join(' ');
+const stageLabel = k => meta?.stages.find(s => s.key === k)?.label || k;
+
+async function load() {
+  if (!meta) {
+    meta = await api('/api/meta');
+    const c = meta.criteria;
+    document.getElementById('crit').textContent = `Buying: ≤${c.maxAgeYears} yrs · ≤${c.maxKm.toLocaleString()} km · ≥${c.minDiscountPct}% under market`;
+  }
+  leads = await api('/api/leads');
+  render();
+}
+
+function render() {
+  document.getElementById('tabs').innerHTML = TABS.map(t => {
+    const n = leads.filter(l => t.stages.includes(l.stage)).length;
+    return `<button class="${t.key === tab ? 'on' : ''}" onclick="tab='${t.key}';render()">${t.label}<span class="n">${n}</span></button>`;
+  }).join('');
+
+  const t = TABS.find(t => t.key === tab);
+  const rows = leads.filter(l => t.stages.includes(l.stage));
+  const el = document.getElementById('list');
+  if (!rows.length) { el.innerHTML = `<div class="empty">Nothing here.</div>`; return; }
+
+  el.innerHTML = `<table><thead><tr>
+    <th>Vehicle</th><th>Asking</th><th>Market</th><th>Under mkt</th><th class="hide-sm">Location</th><th class="hide-sm">Seller</th><th>Status</th>
+  </tr></thead><tbody>${rows.map(l => `
+    <tr class="row" onclick="openLead('${l.id}')">
+      <td>${l.unread ? '<span class="dot"></span>' : ''}<b>${esc(car(l))}</b><br><span class="muted">${l.vehicle.km != null ? l.vehicle.km.toLocaleString() + ' km' : '? km'} · ${esc(l.vehicle.condition)}</span>
+        ${l.flags.map(f => `<span class="tag warn">${esc(f.replace('_', ' '))}</span>`).join('')}</td>
+      <td>${money(l.askingPrice)}</td>
+      <td>${money(l.valuation?.market)}<br><span class="muted">${l.valuation ? esc(l.valuation.method) + (l.valuation.compCount ? ' · ' + l.valuation.compCount + ' comps' : '') : ''}</span></td>
+      <td class="${l.discountPct >= 10 ? 'good' : l.discountPct > 0 ? 'warn' : 'muted'}">${l.discountPct != null ? l.discountPct + '%' : '—'}</td>
+      <td class="hide-sm">${esc([l.location.suburb, l.location.state].filter(Boolean).join(', '))}</td>
+      <td class="hide-sm">${esc(l.seller.name || '')}<br><span class="muted">${[l.seller.phone && 'SMS', l.seller.email && 'Email', l.seller.profileUrl && 'FB'].filter(Boolean).join(' · ')}</span></td>
+      <td>${esc(stageLabel(l.stage))}${l.rejectReason && l.stage === 'rejected' ? `<br><span class="muted">${esc(l.rejectReason)}</span>` : ''}
+        ${l.alerts.map(a => `<br><span class="bad">${esc(a)}</span>`).join('')}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+async function openLead(id) {
+  current = await api('/api/leads/' + id);
+  drawLead();
+  document.getElementById('drawer').classList.add('open');
+  const row = leads.find(l => l.id === id); if (row) row.unread = false;
+}
+function closeLead() { document.getElementById('drawer').classList.remove('open'); current = null; load(); }
+
+function kv(label, value) { return `<div class="kv"><b>${label}</b>${value ?? '—'}</div>`; }
+
+function drawLead() {
+  const l = current, v = l.vehicle, d = l.deal || {}, docs = l.documents || {};
+  const canSms = !!l.seller.phone, canEmail = !!l.seller.email;
+  const html = [];
+
+  html.push(`<button class="close" onclick="closeLead()">×</button>
+    <h2>${esc(car(l))}</h2>
+    <div class="muted">${esc(stageLabel(l.stage))} · ${esc(l.source)} · ${l.url ? `<a href="${esc(l.url)}" target="_blank" rel="noopener" style="color:var(--accent)">View listing ↗</a>` : 'no link'}</div>
+    ${l.alerts.map(a => `<div class="bad" style="margin-top:6px">⚠ ${esc(a)}</div>`).join('')}`);
+
+  html.push(`<div class="sec"><h3>Vehicle & price</h3><div class="grid">
+    ${kv('Asking', money(l.askingPrice))}
+    ${kv('Market estimate', money(l.valuation?.market) + (l.valuation ? ` <span class="muted">(${esc(l.valuation.method)}, ${esc(l.valuation.confidence)})</span>` : ''))}
+    ${kv('Range', l.valuation?.low ? money(l.valuation.low) + ' – ' + money(l.valuation.high) : '—')}
+    ${kv('Under market', l.discountPct != null ? `<span class="${l.discountPct >= 10 ? 'good' : 'warn'}">${l.discountPct}%</span>` : '—')}
+    ${kv('Kilometres', v.km != null ? v.km.toLocaleString() : '—')}
+    ${kv('Condition', esc(v.condition))}
+    ${kv('Body / trans', esc([v.bodyType, v.transmission, v.fuelType].filter(Boolean).join(' · ') || '—'))}
+    ${kv('Location', esc([l.location.suburb, l.location.state, l.location.postcode].filter(Boolean).join(' ')))}
+  </div>
+  ${(l.priceHistory || []).length > 1 ? `<div class="muted" style="margin-top:6px">Price history: ${l.priceHistory.map(p => money(p.price)).join(' → ')}</div>` : ''}
+  ${l.flags.length ? `<div style="margin-top:6px">${l.flags.map(f => `<span class="tag warn">${esc(f.replace('_', ' '))}</span>`).join('')}</div>` : ''}
+  ${l.rejectReason && l.stage === 'rejected' ? `<div class="bad" style="margin-top:6px">${esc(l.rejectReason)}</div>` : ''}
+  ${l.description ? `<details style="margin-top:8px"><summary class="muted">Listing description</summary><p style="white-space:pre-wrap;margin-top:6px">${esc(l.description)}</p></details>` : ''}
+  ${l.stage === 'needs_valuation' || l.stage === 'rejected' ? `<label>Enter market value manually (A$)</label>
+    <div class="actions" style="margin-top:0"><input id="mv" type="number" style="max-width:180px"><button class="btn ghost" onclick="setMarket()">Save & re-check</button></div>` : ''}
+  </div>`);
+
+  html.push(`<div class="sec"><h3>Seller</h3><div class="grid">
+    ${kv('Name', esc(l.seller.name))}${kv('Phone', esc(l.seller.phone))}${kv('Email', esc(l.seller.email))}
+    ${kv('Marketplace profile', l.seller.profileUrl ? `<a href="${esc(l.seller.profileUrl)}" target="_blank" rel="noopener" style="color:var(--accent)">Open ↗</a>` : '—')}
+  </div></div>`);
+
+  if (l.stage === 'draft') {
+    html.push(`<div class="sec"><h3>Intro message — review before sending</h3>
+      <label>SMS ${canSms ? '' : '<span class="warn">(no phone — use for Messenger)</span>'} <span id="smslen" class="muted"></span></label>
+      <textarea id="sms" oninput="smsLen()">${esc(l.drafts.sms)}</textarea>
+      <label>Email subject ${canEmail ? '' : '<span class="warn">(no email)</span>'}</label><input id="esub" value="${esc(l.drafts.email.subject)}">
+      <label>Email body</label><textarea id="ebody" style="min-height:240px">${esc(l.drafts.email.body)}</textarea>
+      <div class="actions">
+        ${canSms ? `<button class="btn" onclick="approve(['sms'${canEmail ? ",'email'" : ''}])">Approve & send ${canEmail ? 'SMS + email' : 'SMS'}</button>` : ''}
+        ${canEmail && !canSms ? `<button class="btn" onclick="approve(['email'])">Approve & send email</button>` : ''}
+        ${!canSms && !canEmail ? `<button class="btn" onclick="copyManual()">Copy text & mark sent on Messenger</button>` : ''}
+        <button class="btn ghost" onclick="saveDrafts()">Save edits</button>
+        <button class="btn bad" onclick="reject()">Reject</button>
+      </div></div>`);
+  }
+
+  if ((l.thread || []).length || ['contacted', 'negotiating'].includes(l.stage)) {
+    html.push(`<div class="sec"><h3>Conversation</h3>
+      ${(l.thread || []).map(m => `<div class="msg ${m.dir}"><small>${m.dir === 'out' ? 'Us' : 'Seller'} · ${esc(m.channel)} · ${new Date(m.at).toLocaleString()}</small>${esc(m.body)}</div>`).join('') || '<div class="muted">No messages yet.</div>'}
+      ${l.stage !== 'opted_out' ? `<label>Reply</label><textarea id="reply"></textarea>
+      <div class="actions">
+        <select id="rch" style="max-width:140px">${canSms ? '<option value="sms">SMS</option>' : ''}${canEmail ? '<option value="email">Email</option>' : ''}<option value="manual">Messenger (manual)</option></select>
+        <button class="btn ghost" onclick="suggest()">✨ AI suggest</button>
+        <button class="btn" onclick="sendReply()">Send</button>
+      </div>` : ''}</div>`);
+  }
+
+  const stageOpts = meta.stages.map(s => `<option value="${s.key}" ${s.key === l.stage ? 'selected' : ''}>${s.step ? s.step + '. ' : ''}${esc(s.label)}</option>`).join('');
+  html.push(`<div class="sec"><h3>Deal</h3><div class="grid">
+    <div><label>Max buy price (private)</label><input type="number" data-deal="maxBuyPrice" value="${d.maxBuyPrice ?? ''}"></div>
+    <div><label>Agreed price (step 5)</label><input type="number" data-deal="agreedPrice" value="${d.agreedPrice ?? ''}"></div>
+    <div><label>Agreed sale date</label><input type="date" data-deal="agreedDate" value="${(d.agreedDate || '').slice(0, 10)}"></div>
+    <div><label>Agreement sent / signed (6)</label><input data-deal="agreementStatus" value="${esc(d.agreementStatus || '')}" placeholder="sent 12/10, signed 13/10"></div>
+    <div><label>Inspector (7)</label><input data-deal="inspector" value="${esc(d.inspector || '')}" placeholder="Me / RACV / Redbook"></div>
+    <div><label>Inspection date</label><input type="date" data-deal="inspectionDate" value="${esc(d.inspectionDate || '')}"></div>
+    <div><label>Inspection result</label><input data-deal="inspectionResult" value="${esc(d.inspectionResult || '')}"></div>
+    <div><label>Easy Cars stock # (9)</label><input data-deal="dmsStockNumber" value="${esc(d.dmsStockNumber || '')}"></div>
+    <div><label>Dealer bids (10)</label><input data-deal="dealerBids" value="${esc(d.dealerBids || '')}" placeholder="Dealer A 41k, Dealer B 42.5k"></div>
+    <div><label>Buying dealer</label><input data-deal="buyingDealer" value="${esc(d.buyingDealer || '')}"></div>
+    <div><label>Sale price to dealer</label><input type="number" data-deal="salePrice" value="${d.salePrice ?? ''}"></div>
+    <div><label>Invoice # (13)</label><input data-deal="invoiceNumber" value="${esc(d.invoiceNumber || '')}"></div>
+    <div><label>Transport (14)</label><input data-deal="transport" value="${esc(d.transport || '')}" placeholder="Carrier, pickup date"></div>
+    ${kv('Gross margin', d.salePrice && d.agreedPrice ? `<span class="${d.salePrice > d.agreedPrice ? 'good' : 'bad'}">${money(d.salePrice - d.agreedPrice)}</span>` : '—')}
+  </div>
+  <h3 style="margin-top:16px">Documents (step 8)</h3>
+  <div class="check"><input type="checkbox" data-doc="companyOwned" ${docs.companyOwned ? 'checked' : ''}> Car is in a company name (GST tax invoice needed)</div>
+  <div class="check"><input type="checkbox" data-doc="financeOwing" ${docs.financeOwing ? 'checked' : ''}> Finance owing (payout letter needed)</div>
+  ${l.checklist.items.map(i => `<div class="check"><input type="checkbox" data-doc="${i.key}" ${docs[i.key] ? 'checked' : ''}> ${esc(i.label)} ${i.done ? '<span class="good">✓</span>' : ''} ${i.problem ? `<span class="bad">${esc(i.problem)}</span>` : ''}</div>`).join('')}
+  ${docs.financeOwing ? `<label>Payout letter valid until</label><input type="date" data-doc="payoutValidUntil" value="${esc(docs.payoutValidUntil || '')}" style="max-width:200px">` : ''}
+  <label>Notes</label><textarea id="notes">${esc(l.notes || '')}</textarea>
+  <div class="actions"><button class="btn ghost" onclick="saveDeal()">Save deal details</button></div>
+  <label>Stage</label>
+  <div class="actions" style="margin-top:0"><select id="stage" style="max-width:320px">${stageOpts}</select><button class="btn" onclick="setStage()">Move</button></div>
+  </div>`);
+
+  if ((l.history || []).length) {
+    html.push(`<div class="sec"><h3>History</h3>${l.history.slice().reverse().map(h => `<div class="muted">${new Date(h.at).toLocaleString()} — ${esc(stageLabel(h.from))} → <b style="color:var(--text)">${esc(stageLabel(h.to))}</b>${h.note ? ' · ' + esc(h.note) : ''}</div>`).join('')}</div>`);
+  }
+
+  document.getElementById('drawer').innerHTML = html.join('');
+  smsLen();
+}
+
+function smsLen() { const s = document.getElementById('sms'), o = document.getElementById('smslen'); if (s && o) o.textContent = `${s.value.length} chars · ${Math.ceil(s.value.length / 153)} SMS`; }
+function drafts() { return { sms: document.getElementById('sms').value, email: { subject: document.getElementById('esub').value, body: document.getElementById('ebody').value } }; }
+async function saveDrafts() { current = await api('/api/leads/' + current.id, { method: 'PATCH', body: { drafts: drafts() } }); toast('Saved'); }
+async function approve(channels) {
+  await api('/api/leads/' + current.id, { method: 'PATCH', body: { drafts: drafts() } });
+  const r = await api('/api/leads/' + current.id + '/approve', { method: 'POST', body: { channels } });
+  toast(Object.entries(r.results).map(([k, v]) => `${k}: ${v}`).join(' · '));
+  current = r.lead; drawLead(); load();
+}
+async function copyManual() {
+  try { await navigator.clipboard.writeText(document.getElementById('sms').value); } catch {}
+  if (current.seller.profileUrl) window.open(current.seller.profileUrl, '_blank', 'noopener');
+  if (!confirm('Text copied. Mark as sent once you have messaged them on Marketplace?')) return;
+  await api('/api/leads/' + current.id, { method: 'PATCH', body: { drafts: drafts() } });
+  const r = await api('/api/leads/' + current.id + '/approve', { method: 'POST', body: { channels: ['manual'] } });
+  current = r.lead; drawLead(); load();
+}
+async function reject() {
+  const reason = prompt('Reason (optional)'); if (reason === null) return;
+  current = await api('/api/leads/' + current.id + '/reject', { method: 'POST', body: { reason } }); drawLead(); load();
+}
+async function setMarket() {
+  const v = document.getElementById('mv').value; if (!v) return;
+  current = await api('/api/leads/' + current.id, { method: 'PATCH', body: { manualMarketValue: v } });
+  toast('Now: ' + stageLabel(current.stage)); drawLead(); load();
+}
+async function suggest() {
+  toast('Drafting…');
+  const r = await api('/api/leads/' + current.id + '/suggest-reply', { method: 'POST', body: { channel: document.getElementById('rch').value } });
+  document.getElementById('reply').value = r.text;
+}
+async function sendReply() {
+  const body = document.getElementById('reply').value.trim(); if (!body) return;
+  const channel = document.getElementById('rch').value;
+  if (channel === 'manual') { try { await navigator.clipboard.writeText(body); } catch {} toast('Copied — paste it into Messenger'); }
+  current = await api('/api/leads/' + current.id + '/message', { method: 'POST', body: { channel, body } }); drawLead();
+}
+async function saveDeal() {
+  const deal = {}, documents = {};
+  document.querySelectorAll('[data-deal]').forEach(i => { deal[i.dataset.deal] = i.type === 'number' ? (i.value ? Number(i.value) : null) : i.value || null; });
+  document.querySelectorAll('[data-doc]').forEach(i => { documents[i.dataset.doc] = i.type === 'checkbox' ? i.checked : i.value || null; });
+  current = await api('/api/leads/' + current.id, { method: 'PATCH', body: { deal, documents, notes: document.getElementById('notes').value } });
+  toast('Saved'); drawLead();
+}
+async function setStage() {
+  await saveDeal();
+  const stage = document.getElementById('stage').value;
+  current = await api('/api/leads/' + current.id + '/stage', { method: 'POST', body: { stage } });
+  toast('Moved to ' + stageLabel(stage)); drawLead(); load();
+}
+
+load();
+</script>
+</body>
+</html>

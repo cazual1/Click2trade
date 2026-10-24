@@ -6,7 +6,8 @@
   "main": "server.mjs",
   "scripts": {
     "start": "node server.mjs",
-    "dev": "node --watch server.mjs"
+    "dev": "node --watch server.mjs",
+    "ingest": "node ingest-cli.mjs"
   },
   "dependencies": {
     "openai": "^4.77.0",

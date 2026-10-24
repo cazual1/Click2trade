@@ -7,6 +7,7 @@ import OpenAI from 'openai';
 import twilio from 'twilio';
 import { createClient } from '@supabase/supabase-js';
 import { sendDealerOutreach, createInboundHandler } from './dealer-outreach.mjs';
+import { createAcquisitionRouter, handleSellerEmail } from './acquisition.mjs';
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -444,8 +445,20 @@ app.post('/webhook', async (req, res) => {
 });
 
 // ── INBOUND EMAIL: DEALER REPLIES ──
+// Seller replies (lead-{id}@...) go to the acquisition pipeline, dealer quotes (quote-...) to outreach
 const handleInbound = createInboundHandler(sessions, sendMessage);
-app.post('/inbound-email', handleInbound);
+app.post('/inbound-email', async (req, res) => {
+  try {
+    if (await handleSellerEmail(req)) return res.sendStatus(200);
+  } catch (err) {
+    console.error('Seller email error:', err);
+    return res.sendStatus(200);
+  }
+  return handleInbound(req, res);
+});
+
+// ── ACQUISITION: listing feed, approval queue, deal pipeline ──
+app.use(createAcquisitionRouter());
 
 // ── HEALTH CHECK ──
 app.get('/', (req, res) => {
