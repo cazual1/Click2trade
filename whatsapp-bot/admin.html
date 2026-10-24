@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>Click2Trade Acquisitions</title>
+<style>
+:root{
+  --bg:#f5f5f7;--surface:#ffffff;--surface-2:#fbfbfd;--fill:rgba(118,118,128,.12);--fill-2:rgba(118,118,128,.08);
+  --line:rgba(60,60,67,.12);--text:#1d1d1f;--text-2:#6e6e73;--text-3:#a1a1a6;
+  --blue:#0071e3;--blue-tint:rgba(0,113,227,.1);--green:#28a745;--green-tint:rgba(40,167,69,.12);
+  --orange:#f56300;--orange-tint:rgba(245,99,0,.1);--red:#e30000;--red-tint:rgba(227,0,0,.08);
+  --glass:rgba(245,245,247,.72);--shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.14);--r:18px;--r-sm:12px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',Inter,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#000000;--surface:#1c1c1e;--surface-2:#161618;--fill:rgba(118,118,128,.24);--fill-2:rgba(118,118,128,.14);
+  --line:rgba(84,84,88,.48);--text:#f5f5f7;--text-2:#98989d;--text-3:#636366;
+  --blue:#2997ff;--blue-tint:rgba(41,151,255,.16);--green:#30d158;--green-tint:rgba(48,209,88,.16);
+  --orange:#ff9f0a;--orange-tint:rgba(255,159,10,.16);--red:#ff453a;--red-tint:rgba(255,69,58,.16);
+  --glass:rgba(22,22,24,.72);--shadow:none;--shadow-lg:0 12px 48px rgba(0,0,0,.6);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font:15px/1.47 var(--font);letter-spacing:-.01em;-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:var(--blue);text-decoration:none}
+input,textarea,select{font:inherit;color:var(--text)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── Top bar ── */
+.bar{position:sticky;top:0;z-index:10;background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line)}
+.bar-in{max-width:1200px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:16px;letter-spacing:-.02em}
+.logo i{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0071e3,#34aadc);display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px;font-weight:700}
+.search{margin-left:auto;position:relative;width:min(280px,45vw)}
+.search input{width:100%;height:34px;border-radius:10px;border:0;background:var(--fill);padding:0 12px 0 32px;font-size:14px;outline:none}
+.search input:focus{box-shadow:0 0 0 3px var(--blue-tint)}
+.search svg{position:absolute;left:10px;top:9px;width:15px;height:15px;color:var(--text-2)}
+
+main{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.hero h1{font-size:40px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
+.hero p{color:var(--text-2);font-size:17px;margin-top:6px}
+.criteria{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:500;padding:5px 11px;border-radius:999px;background:var(--fill-2);color:var(--text-2)}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
+.stat{background:var(--surface);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);text-align:left;transition:transform .2s}
+button.stat:hover{transform:translateY(-2px)}
+.stat .k{font-size:13px;color:var(--text-2);font-weight:500;display:flex;align-items:center;gap:6px}
+.stat .k span{width:7px;height:7px;border-radius:50%}
+.stat .v{font-size:32px;font-weight:600;letter-spacing:-.03em;margin-top:4px;line-height:1.15}
+.stat .s{font-size:13px;color:var(--text-3);margin-top:2px}
+
+/* ── Segmented control ── */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--fill);border-radius:10px;padding:2px;overflow-x:auto;max-width:100%;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;transition:background .2s,box-shadow .2s}
+.seg button.on{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+.seg button .c{color:var(--text-2);margin-left:5px;font-weight:400}
+.sort{font-size:13px;color:var(--text-2)}
+.sort select{border:0;color:var(--blue);font-weight:500;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;padding-right:16px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%230071e3' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='m1 1 4 4 4-4'/%3E%3C/svg%3E") right center no-repeat}
+
+/* ── Cards ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.card:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(0,0,0,.04),0 16px 32px rgba(0,0,0,.08)}
+.ph{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph .mono{font-size:44px;font-weight:700;letter-spacing:-.04em;color:var(--text-3)}
+.ph .badge{position:absolute;top:12px;left:12px}
+.ph .unread{position:absolute;top:12px;right:12px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px}
+.badge{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.badge.g{background:var(--green-tint);color:var(--green)}.badge.o{background:var(--orange-tint);color:var(--orange)}
+.badge.n{background:var(--fill);color:var(--text-2)}.badge.r{background:var(--red-tint);color:var(--red)}
+.ph .badge.g{background:rgba(255,255,255,.88);color:#1a7f37}
+@media (prefers-color-scheme:dark){.ph .badge.g{background:rgba(0,0,0,.6);color:var(--green)}}
+.cb{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.cb h3{font-size:17px;font-weight:600;letter-spacing:-.02em;line-height:1.25}
+.cb .sub{font-size:13px;color:var(--text-2);margin-top:2px}
+.prices{display:flex;justify-content:space-between;align-items:baseline}
+.prices .ask{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.prices .mkt{font-size:13px;color:var(--text-2);text-align:right}
+.meter{height:6px;border-radius:3px;background:var(--fill);position:relative;overflow:hidden}
+.meter b{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--green)}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--text-2);margin-top:auto;padding-top:4px}
+.flags{display:flex;gap:5px;flex-wrap:wrap}
+.alert{font-size:13px;color:var(--red);display:flex;gap:6px;align-items:flex-start}
+
+.empty{text-align:center;padding:80px 20px;color:var(--text-2)}
+.empty .ic{width:64px;height:64px;border-radius:50%;background:var(--fill-2);display:grid;place-items:center;margin:0 auto 16px;font-size:28px}
+.empty h3{font-size:20px;color:var(--text);font-weight:600;margin-bottom:4px}
+
+/* ── Sheet ── */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;top:12px;right:12px;bottom:12px;width:min(620px,calc(100% - 24px));background:var(--bg);border-radius:22px;box-shadow:var(--shadow-lg);z-index:21;transform:translateX(calc(100% + 24px));transition:transform .45s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;overflow:hidden}
+.sheet.on{transform:none}
+.sh-head{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line);position:sticky;top:0;z-index:2}
+.sh-head .t{font-weight:600;font-size:15px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.x{width:30px;height:30px;border-radius:50%;background:var(--fill);display:grid;place-items:center;color:var(--text-2);font-size:17px;flex-shrink:0}
+.sh-body{overflow-y:auto;padding:0 20px 40px;flex:1;-webkit-overflow-scrolling:touch}
+.sh-hero{margin:0 -20px;aspect-ratio:2/1;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;overflow:hidden}
+.sh-hero img{width:100%;height:100%;object-fit:cover}
+.sh-hero .mono{font-size:64px;font-weight:700;color:var(--text-3);letter-spacing:-.04em}
+.sh-title{padding:20px 0 4px}
+.sh-title h2{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+.sh-title p{color:var(--text-2);margin-top:4px}
+
+.deal-box{background:var(--surface);border-radius:var(--r);padding:20px;margin:16px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;box-shadow:var(--shadow)}
+.deal-box .k{font-size:12px;color:var(--text-2);font-weight:500}
+.deal-box .v{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-top:2px}
+.deal-box .v.g{color:var(--green)}
+
+/* Progress */
+.progress{background:var(--surface);border-radius:var(--r);padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+.progress .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.progress .top b{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.progress .top span{font-size:13px;color:var(--text-2)}
+.steps{display:grid;grid-template-columns:repeat(16,1fr);gap:3px}
+.steps i{height:5px;border-radius:3px;background:var(--fill)}
+.steps i.d{background:var(--blue)}.steps i.c{background:var(--blue);opacity:.45}
+.progress .nx{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+
+/* Grouped lists */
+.group-t{font-size:13px;color:var(--text-2);text-transform:uppercase;letter-spacing:.02em;padding:24px 16px 7px;font-weight:400}
+.group{background:var(--surface);border-radius:var(--r-sm);overflow:hidden;box-shadow:var(--shadow)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;min-height:44px;position:relative}
+.row+.row::before{content:'';position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}
+.row .l{color:var(--text);flex-shrink:0}
+.row .r{color:var(--text-2);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.row input,.row select{border:0;background:none;text-align:right;outline:none;color:var(--text-2);min-width:0;flex:1;width:100%}
+.row input:focus{color:var(--text)}
+.row input[type=date]{max-width:170px}
+.row.problem .l{color:var(--red)}
+.row .hint{font-size:12px;color:var(--red);display:block}
+.group-f{font-size:13px;color:var(--text-2);padding:7px 16px 0}
+.txt{width:100%;border:0;background:var(--surface);border-radius:var(--r-sm);padding:12px 16px;outline:none;resize:vertical;min-height:110px;line-height:1.5;box-shadow:var(--shadow)}
+.txt:focus{box-shadow:0 0 0 3px var(--blue-tint)}
+.field-l{font-size:13px;color:var(--text-2);margin:14px 4px 6px;display:flex;justify-content:space-between}
+.subj{width:100%;border:0;background:var(--surface);border-radius:var(--r-sm);padding:12px 16px;outline:none;box-shadow:var(--shadow);font-weight:500}
+
+/* Switch */
+.sw{position:relative;width:51px;height:31px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;border-radius:999px;background:var(--fill);transition:background .25s}
+.sw span::after{content:'';position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16);transition:transform .25s cubic-bezier(.3,.7,.3,1)}
+.sw input:checked+span{background:#34c759}
+.sw input:checked+span::after{transform:translateX(20px)}
+
+/* Buttons */
+.btn{height:44px;padding:0 22px;border-radius:999px;background:var(--blue);color:#fff;font-size:15px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s,transform .1s}
+.btn:active{transform:scale(.97)}.btn:hover{opacity:.9}
+.btn.sec{background:var(--fill);color:var(--blue)}
+.btn.danger{background:none;color:var(--red)}
+.btn.sm{height:34px;padding:0 16px;font-size:14px}
+.btn.wide{flex:1}
+.btn:disabled{opacity:.35;pointer-events:none}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.link{color:var(--blue);font-size:15px}
+
+/* Thread */
+.thread{display:flex;flex-direction:column;gap:6px;padding:4px 0}
+.bub{max-width:80%;padding:9px 14px;border-radius:20px;font-size:15px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+.bub.out{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:6px}
+.bub.in{align-self:flex-start;background:var(--surface);border-bottom-left-radius:6px;box-shadow:var(--shadow)}
+.meta{font-size:11px;color:var(--text-3);margin:6px 8px 0}
+.meta.out{align-self:flex-end}.meta.in{align-self:flex-start}
+.composer{display:flex;gap:8px;align-items:flex-end;margin-top:12px;background:var(--surface);border-radius:22px;padding:6px 6px 6px 14px;box-shadow:var(--shadow)}
+.composer textarea{flex:1;border:0;background:none;outline:none;resize:none;min-height:32px;max-height:160px;padding:6px 0;line-height:1.4}
+.send{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;flex-shrink:0}
+.ch-pick{display:flex;gap:8px;align-items:center;margin-top:10px;justify-content:space-between;flex-wrap:wrap}
+
+details summary{cursor:pointer;list-style:none;color:var(--blue);font-size:15px;padding:12px 0}
+details summary::-webkit-details-marker{display:none}
+
+/* Toast + dialog */
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;background:rgba(29,29,31,.92);color:#fff;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:11px 20px;border-radius:999px;font-size:14px;font-weight:500;transition:all .35s cubic-bezier(.32,.72,0,1);z-index:40;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.dlg{position:fixed;inset:0;display:grid;place-items:center;z-index:30;background:rgba(0,0,0,.32);padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.dlg.on{opacity:1;pointer-events:auto}
+.dlg-c{background:var(--surface);border-radius:20px;width:min(340px,100%);padding:22px 20px 16px;text-align:center;box-shadow:var(--shadow-lg);transform:scale(1.05);transition:transform .25s}
+.dlg.on .dlg-c{transform:none}
+.dlg-c h4{font-size:17px;font-weight:600}
+.dlg-c p{font-size:13px;color:var(--text-2);margin-top:4px}
+.dlg-c input{width:100%;margin-top:14px;height:40px;border-radius:10px;border:0;background:var(--fill);padding:0 12px;outline:none}
+.dlg-c .actions{margin-top:16px}
+
+/* Sign in */
+.signin{min-height:100vh;display:grid;place-items:center;padding:24px}
+.signin-c{width:min(380px,100%);text-align:center}
+.signin-c .logo i{width:64px;height:64px;border-radius:16px;font-size:30px;margin:0 auto 20px}
+.signin-c h1{font-size:32px;font-weight:700;letter-spacing:-.03em}
+.signin-c p{color:var(--text-2);margin:6px 0 28px}
+.signin-c input{width:100%;height:50px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 16px;font-size:17px;outline:none;margin-bottom:12px}
+.signin-c input:focus{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-tint)}
+.signin-c .btn{width:100%;height:50px;font-size:17px}
+
+.skel{background:linear-gradient(90deg,var(--fill-2),var(--fill),var(--fill-2));background-size:200% 100%;animation:sk 1.4s infinite;border-radius:var(--r);height:300px}
+@keyframes sk{to{background-position:-200% 0}}
+
+@media (max-width:860px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){
+  .bar-in,main{padding-left:16px;padding-right:16px}
+  main{padding-top:20px}
+  .hero h1{font-size:32px}
+  .stat{padding:14px 16px}.stat .v{font-size:26px}
+  .sheet{top:auto;left:0;right:0;bottom:0;width:100%;height:94vh;border-radius:22px 22px 0 0;transform:translateY(100%)}
+  .deal-box{padding:16px;gap:8px}.deal-box .v{font-size:18px}
+  .logo b{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="scrim" id="scrim" onclick="closeLead()"></div>
+<aside class="sheet" id="sheet" aria-modal="true" role="dialog"></aside>
+<div class="dlg" id="dlg"><div class="dlg-c" id="dlgc"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const TABS = [
+  { key: 'approve', label: 'To approve', stages: ['draft'] },
+  { key: 'talking', label: 'Conversations', stages: ['contacted', 'negotiating'] },
+  { key: 'deals', label: 'Deals', stages: ['agreed','agreement_sent','inspection','documents','dms_loaded','selling','seller_paid','in_stock','invoiced','transport','payment_received'] },
+  { key: 'value', label: 'Needs a price', stages: ['needs_valuation'] },
+  { key: 'done', label: 'Completed', stages: ['delivered'] },
+  { key: 'rejected', label: 'Passed', stages: ['rejected', 'lost', 'opted_out'] },
+];
+const FLOW = ['draft','contacted','negotiating','agreed','agreement_sent','inspection','documents','dms_loaded','selling','seller_paid','in_stock','invoiced','transport','payment_received','delivered'];
+const NEXT_LABEL = {
+  draft: 'Approve & send', contacted: 'Seller replied', negotiating: 'Price agreed', agreed: 'Agreement sent',
+  agreement_sent: 'Book inspection', inspection: 'Collect documents', documents: 'Loaded into Easy Cars',
+  dms_loaded: 'Offer to dealers', selling: 'Seller paid', seller_paid: 'In stock', in_stock: 'Invoice dealer',
+  invoiced: 'Transport booked', transport: 'Dealer paid', payment_received: 'Delivered',
+};
+const EMPTY = {
+  approve: ['✓', 'All caught up', 'New under-market cars appear here after the daily scan.'],
+  talking: ['💬', 'No conversations yet', 'Approved intros wait here for seller replies.'],
+  deals: ['🤝', 'No active deals', 'Agree a price with a seller to start a deal.'],
+  value: ['🔍', 'Nothing to price', 'Cars without enough comparable listings land here.'],
+  done: ['🏁', 'No completed deals yet', 'Delivered cars are kept here.'],
+  rejected: ['—', 'Nothing passed on', 'Cars outside your buying criteria show here.'],
+};
+
+let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null;
+let token = '';
+try { token = localStorage.getItem('c2t_admin') || ''; } catch {}
+
+// ── helpers ──
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => n == null || isNaN(n) ? '—' : '$' + Math.round(n).toLocaleString('en-AU');
+const kmFmt = n => n == null ? '— km' : Math.round(n).toLocaleString('en-AU') + ' km';
+const carName = l => [l.vehicle.year, l.vehicle.make, l.vehicle.model].filter(Boolean).join(' ');
+const stageLabel = k => meta?.stages.find(s => s.key === k)?.label || k;
+const stageStep = k => meta?.stages.find(s => s.key === k)?.step || 0;
+const flagLabel = f => ({ finance_owing: 'Finance owing', damaged: 'Possible damage', no_rego: 'No rego', swap_only: 'Swap', written_off: 'Written off', dealer: 'Dealer' }[f] || f);
+const ago = iso => { const s = (Date.now() - new Date(iso)) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm ago' : s < 86400 ? Math.floor(s / 3600) + 'h ago' : Math.floor(s / 86400) + 'd ago'; };
+const photo = l => (l.photos || [])[0];
+const mono = l => esc((l.vehicle.make || '?').slice(0, 1));
+
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2600); }
+
+function dialog({ title, text, input, ok = 'OK', danger }) {
+  return new Promise(resolve => {
+    $('dlgc').innerHTML = `<h4>${esc(title)}</h4>${text ? `<p>${esc(text)}</p>` : ''}${input !== undefined ? `<input id="dlgi" placeholder="${esc(input)}">` : ''}
+      <div class="actions"><button class="btn sec sm wide" id="dlgn">Cancel</button><button class="btn sm wide" id="dlgy" style="${danger ? 'background:var(--red)' : ''}">${esc(ok)}</button></div>`;
+    $('dlg').classList.add('on');
+    const done = v => { $('dlg').classList.remove('on'); resolve(v); };
+    $('dlgn').onclick = () => done(null);
+    $('dlgy').onclick = () => done(input !== undefined ? $('dlgi').value : true);
+    if ($('dlgi')) { $('dlgi').focus(); $('dlgi').onkeydown = e => e.key === 'Enter' && $('dlgy').click(); }
+  });
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { signOut(); throw new Error('unauthorised'); }
+  if (!res.ok) { toast(data.error || 'Something went wrong'); throw new Error(data.error); }
+  return data;
+}
+
+// ── sign in ──
+function signInScreen(err) {
+  $('app').innerHTML = `<div class="signin"><form class="signin-c" onsubmit="event.preventDefault();signIn()">
+    <div class="logo"><i>C</i></div>
+    <h1>Acquisitions</h1><p>${err ? '<span style="color:var(--red)">That code didn’t work. Try again.</span>' : 'Sign in to review today’s cars.'}</p>
+    <input id="tok" type="password" placeholder="Access code" autocomplete="current-password" autofocus>
+    <button class="btn" type="submit">Continue</button>
+  </form></div>`;
+}
+async function signIn() {
+  token = $('tok').value.trim(); if (!token) return;
+  try { localStorage.setItem('c2t_admin', token); } catch {}
+  try { await load(); } catch {}
+}
+function signOut() { try { localStorage.removeItem('c2t_admin'); } catch {} const had = !!token; token = ''; signInScreen(had); }
+
+// ── data ──
+async function load() {
+  if (!meta) meta = await api('/api/meta');
+  leads = await api('/api/leads');
+  if (!$('grid')) shell();
+  render();
+}
+
+function shell() {
+  const c = meta.criteria;
+  $('app').innerHTML = `
+  <header class="bar"><div class="bar-in">
+    <div class="logo"><i>C</i><b>Click2Trade</b></div>
+    <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5" stroke-linecap="round"/></svg>
+      <input id="q" placeholder="Search cars, sellers, suburbs" oninput="query=this.value.toLowerCase();render()"></label>
+  </div></header>
+  <main>
+    <section class="hero">
+      <div><h1 id="greet"></h1><p id="sum"></p></div>
+      <div class="criteria"><span class="chip">${c.maxAgeYears} years or newer</span><span class="chip">Under ${(c.maxKm / 1000).toFixed(0)}k km</span><span class="chip">${c.minDiscountPct}%+ below market</span></div>
+    </section>
+    <section class="stats" id="stats"></section>
+    <div class="toolbar"><div class="seg" id="seg" role="tablist"></div>
+      <label class="sort">Sort by <select id="sort" onchange="sort=this.value;render()">
+        <option value="deal">Best deal</option><option value="new">Newest</option><option value="price">Lowest price</option><option value="km">Lowest km</option></select></label></div>
+    <section class="grid" id="grid"></section>
+  </main>`;
+}
+
+function render() {
+  const h = new Date().getHours();
+  $('greet').textContent = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const count = t => leads.filter(l => TABS.find(x => x.key === t).stages.includes(l.stage)).length;
+  const toApprove = count('approve');
+  const unread = leads.filter(l => l.unread).length;
+  $('sum').textContent = toApprove ? `${toApprove} car${toApprove > 1 ? 's' : ''} ready for your approval${unread ? ` · ${unread} new repl${unread > 1 ? 'ies' : 'y'}` : ''}.` : unread ? `${unread} new repl${unread > 1 ? 'ies' : 'y'} from sellers.` : 'You’re all caught up.';
+
+  const deals = leads.filter(l => TABS[2].stages.includes(l.stage));
+  const margin = deals.reduce((s, l) => s + ((l.deal?.salePrice || l.valuation?.market || 0) - (l.deal?.agreedPrice || 0)), 0);
+  const upside = leads.filter(l => l.stage === 'draft').reduce((s, l) => s + Math.max(0, (l.valuation?.market || 0) - (l.askingPrice || 0)), 0);
+  $('stats').innerHTML = [
+    ['approve', 'To approve', toApprove, upside ? money(upside) + ' under market' : 'Nothing waiting', 'var(--blue)'],
+    ['talking', 'Conversations', count('talking'), unread ? unread + ' unread' : 'No new replies', 'var(--orange)'],
+    ['deals', 'Active deals', deals.length, deals.length ? money(margin) + ' est. margin' : 'None in progress', 'var(--green)'],
+    ['done', 'Completed', count('done'), 'Delivered to dealers', 'var(--text-3)'],
+  ].map(([k, label, v, s, col]) => `<button class="stat" onclick="setTab('${k}')"><div class="k"><span style="background:${col}"></span>${label}</div><div class="v num">${v}</div><div class="s">${s}</div></button>`).join('');
+
+  $('seg').innerHTML = TABS.map(t => `<button role="tab" class="${t.key === tab ? 'on' : ''}" onclick="setTab('${t.key}')">${t.label}<span class="c">${count(t.key)}</span></button>`).join('');
+
+  const t = TABS.find(t => t.key === tab);
+  let rows = leads.filter(l => t.stages.includes(l.stage));
+  if (query) rows = rows.filter(l => [carName(l), l.vehicle.variant, l.seller.name, l.location.suburb, l.location.state].join(' ').toLowerCase().includes(query));
+  const sorters = {
+    deal: (a, b) => (b.discountPct ?? -999) - (a.discountPct ?? -999),
+    new: (a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''),
+    price: (a, b) => (a.askingPrice ?? 1e9) - (b.askingPrice ?? 1e9),
+    km: (a, b) => (a.vehicle.km ?? 1e9) - (b.vehicle.km ?? 1e9),
+  };
+  rows.sort((a, b) => (b.unread ? 1 : 0) - (a.unread ? 1 : 0) || sorters[sort](a, b));
+
+  if (!rows.length) {
+    const [ic, h3, p] = query ? ['🔍', 'No results', `Nothing matches “${query}”.`] : EMPTY[tab];
+    $('grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ic">${ic}</div><h3>${esc(h3)}</h3><p>${esc(p)}</p></div>`;
+    return;
+  }
+  $('grid').innerHTML = rows.map(card).join('');
+}
+
+function dealBadge(l) {
+  if (l.discountPct == null) return `<span class="badge n">Needs a price</span>`;
+  if (l.discountPct >= meta.criteria.minDiscountPct) return `<span class="badge g">${l.discountPct}% below market</span>`;
+  if (l.discountPct > 0) return `<span class="badge o">${l.discountPct}% below</span>`;
+  return `<span class="badge n">At market</span>`;
+}
+
+function card(l) {
+  const v = l.vehicle, mkt = l.valuation?.market;
+  const pct = mkt && l.askingPrice ? Math.max(4, Math.min(100, l.askingPrice / mkt * 100)) : 0;
+  const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stageLabel(l.stage);
+  const last = (l.thread || []).slice(-1)[0];
+  return `<button class="card" onclick="openLead('${l.id}')">
+    <div class="ph">${photo(l) ? `<img loading="lazy" src="${esc(photo(l))}" alt="" onerror="this.remove()">` : ''}<span class="mono">${mono(l)}</span>
+      <div style="position:absolute;top:12px;left:12px">${dealBadge(l)}</div>
+      ${l.unread ? '<span class="unread">New reply</span>' : ''}</div>
+    <div class="cb">
+      <div><h3>${esc(carName(l))}</h3><div class="sub">${esc(v.variant || '')}${v.variant ? ' · ' : ''}${kmFmt(v.km)}${v.condition && v.condition !== 'Unknown' ? ' · ' + esc(v.condition) : ''}</div></div>
+      <div class="prices"><span class="ask num">${money(l.deal?.agreedPrice || l.askingPrice)}</span><span class="mkt num">${l.deal?.agreedPrice ? 'Agreed' : mkt ? 'Market ' + money(mkt) : ''}</span></div>
+      ${mkt ? `<div class="meter"><b style="width:${pct}%"></b></div>` : ''}
+      ${l.alerts.map(a => `<div class="alert">⚠︎ ${esc(a)}</div>`).join('')}
+      ${last && tab === 'talking' ? `<div class="sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${last.dir === 'in' ? '' : 'You: '}${esc(last.body)}</div>` : ''}
+      <div class="foot"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(status)}</span>
+        <span class="flags">${l.flags.filter(f => f !== 'written_off' && f !== 'dealer').slice(0, 2).map(f => `<span class="badge o">${flagLabel(f)}</span>`).join('')}</span></div>
+    </div></button>`;
+}
+
+function setTab(k) { tab = k; render(); window.scrollTo({ top: $('seg').offsetTop - 80, behavior: 'smooth' }); }
+
+// ── detail sheet ──
+async function openLead(id) {
+  current = await api('/api/leads/' + id);
+  draw();
+  $('sheet').classList.add('on'); $('scrim').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  const row = leads.find(l => l.id === id); if (row && row.unread) { row.unread = false; render(); }
+}
+function closeLead() { $('sheet').classList.remove('on'); $('scrim').classList.remove('on'); document.body.style.overflow = ''; current = null; load(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && current) closeLead(); });
+
+const row = (l, r) => `<div class="row"><span class="l">${l}</span><span class="r">${r ?? '—'}</span></div>`;
+const inRow = (label, key, val, type = 'text', ph = '') => `<label class="row"><span class="l">${label}</span><input type="${type}" data-deal="${key}" value="${esc(val ?? '')}" placeholder="${esc(ph)}" onchange="autosave()"></label>`;
+const swRow = (label, key, on, extra = '') => `<label class="row ${extra ? 'problem' : ''}"><span class="l">${label}${extra ? `<span class="hint">${esc(extra)}</span>` : ''}</span><span class="sw"><input type="checkbox" data-doc="${key}" ${on ? 'checked' : ''} onchange="autosave(true)"><span></span></span></label>`;
+
+function draw() {
+  const l = current, v = l.vehicle, d = l.deal || {}, docs = l.documents || {};
+  const canSms = !!l.seller.phone, canEmail = !!l.seller.email;
+  const off = ['rejected', 'lost', 'opted_out'].includes(l.stage);
+  const step = stageStep(l.stage);
+  const nextKey = FLOW[FLOW.indexOf(l.stage) + 1];
+  const h = [];
+
+  h.push(`<div class="sh-head"><button class="x" onclick="closeLead()" aria-label="Close">✕</button><span class="t">${esc(carName(l))}</span>
+    ${l.url ? `<a class="link" href="${esc(l.url)}" target="_blank" rel="noopener">Listing ↗</a>` : ''}</div><div class="sh-body">`);
+
+  h.push(`<div class="sh-hero">${photo(l) ? `<img src="${esc(photo(l))}" alt="" onerror="this.remove()">` : ''}<span class="mono">${mono(l)}</span></div>
+    <div class="sh-title"><h2>${esc(carName(l))}</h2><p>${esc([v.variant, kmFmt(v.km), [l.location.suburb, l.location.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</p>
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${dealBadge(l)}${l.flags.map(f => `<span class="badge ${f === 'written_off' || f === 'dealer' ? 'r' : 'o'}">${flagLabel(f)}</span>`).join('')}</div></div>`);
+
+  h.push(`<div class="deal-box">
+    <div><div class="k">Asking</div><div class="v num">${money(l.askingPrice)}</div></div>
+    <div><div class="k">Market value</div><div class="v num">${money(l.valuation?.market)}</div></div>
+    <div><div class="k">${d.agreedPrice ? 'Agreed' : 'Potential'}</div><div class="v num ${l.valuation?.market > (d.agreedPrice || l.askingPrice) ? 'g' : ''}">${d.agreedPrice ? money(d.agreedPrice) : l.valuation?.market ? money(l.valuation.market - l.askingPrice) : '—'}</div></div>
+  </div>`);
+
+  l.alerts.forEach(a => h.push(`<div class="alert" style="margin:0 4px 8px">⚠︎ ${esc(a)}</div>`));
+  if (off && l.rejectReason) h.push(`<p style="color:var(--text-2);margin:0 4px 8px">${esc(l.rejectReason)}</p>`);
+
+  // Progress through the 16 steps
+  if (!off) {
+    h.push(`<div class="progress"><div class="top"><b>${esc(stageLabel(l.stage))}</b><span>Step ${step} of 16</span></div>
+      <div class="steps">${Array.from({ length: 16 }, (_, i) => `<i class="${i + 1 < step ? 'd' : i + 1 === step ? 'c' : ''}"></i>`).join('')}</div>
+      ${l.stage !== 'draft' && nextKey ? `<div class="nx"><button class="btn wide" onclick="advance('${nextKey}')">${NEXT_LABEL[l.stage]} →</button></div>` : ''}
+    </div>`);
+  }
+
+  // Needs a price
+  if (l.stage === 'needs_valuation' || (off && l.stage === 'rejected')) {
+    h.push(`<div class="group-t">Set market value</div><div class="group"><label class="row"><span class="l">Market value</span><input id="mv" type="number" inputmode="numeric" placeholder="$0"></label></div>
+      <div class="group-f">We’ll check it against your buying criteria.</div><div class="actions"><button class="btn" onclick="setMarket()">Save value</button></div>`);
+  }
+
+  // Approve intro
+  if (l.stage === 'draft') {
+    const label = canSms && canEmail ? 'Send text & email' : canSms ? 'Send text' : canEmail ? 'Send email' : 'Copy for Messenger';
+    h.push(`<div class="group-t">Introduction</div>
+      <div class="field-l"><span>${canSms ? 'Text message' : 'Marketplace message'}</span><span id="smslen" class="num"></span></div>
+      <textarea class="txt" id="sms" oninput="smsLen()">${esc(l.drafts.sms)}</textarea>
+      ${canEmail ? `<div class="field-l"><span>Email</span></div><input class="subj" id="esub" value="${esc(l.drafts.email.subject)}">
+      <textarea class="txt" id="ebody" style="min-height:260px;margin-top:8px">${esc(l.drafts.email.body)}</textarea>` : ''}
+      <div class="actions"><button class="btn wide" onclick="approve()">${label}</button><button class="btn sec" onclick="saveDrafts()">Save</button></div>
+      <div class="actions" style="justify-content:center;margin-top:6px"><button class="btn danger sm" onclick="reject()">Pass on this car</button></div>`);
+  }
+
+  // Conversation
+  if ((l.thread || []).length || ['contacted', 'negotiating'].includes(l.stage)) {
+    h.push(`<div class="group-t">Messages</div><div class="thread">${(l.thread || []).map(m => `<div class="bub ${m.dir}">${esc(m.body)}</div><div class="meta ${m.dir}">${esc({ sms: 'Text', email: 'Email', manual: 'Marketplace' }[m.channel] || m.channel)} · ${ago(m.at)}</div>`).join('') || '<p style="color:var(--text-2);text-align:center;padding:12px">Waiting for the seller to reply.</p>'}</div>
+      ${l.stage !== 'opted_out' ? `<div class="composer"><textarea id="reply" rows="1" placeholder="Message" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+        <button class="send" onclick="sendReply()" aria-label="Send"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12V2M2.5 6.5 7 2l4.5 4.5"/></svg></button></div>
+        <div class="ch-pick"><div class="seg" id="rch">${[canSms && 'sms', canEmail && 'email', 'manual'].filter(Boolean).map((c, i) => `<button class="${i === 0 ? 'on' : ''}" data-ch="${c}" onclick="pickCh(this)">${{ sms: 'Text', email: 'Email', manual: 'Marketplace' }[c]}</button>`).join('')}</div>
+        <button class="btn sec sm" onclick="suggest()">✦ Suggest reply</button></div>` : ''}`);
+  }
+
+  // Seller
+  h.push(`<div class="group-t">Seller</div><div class="group">
+    ${row('Name', esc(l.seller.name))}
+    ${row('Mobile', l.seller.phone ? `<a href="tel:${esc(l.seller.phone)}">${esc(l.seller.phone)}</a>` : '—')}
+    ${row('Email', l.seller.email ? `<a href="mailto:${esc(l.seller.email)}">${esc(l.seller.email)}</a>` : '—')}
+    ${l.seller.profileUrl ? row('Marketplace', `<a href="${esc(l.seller.profileUrl)}" target="_blank" rel="noopener">View profile</a>`) : ''}
+  </div>`);
+
+  // Vehicle
+  h.push(`<div class="group-t">Vehicle</div><div class="group">
+    ${row('Odometer', kmFmt(v.km))}${row('Condition', esc(v.condition))}
+    ${v.bodyType ? row('Body', esc(v.bodyType)) : ''}${v.transmission ? row('Transmission', esc(v.transmission)) : ''}${v.fuelType ? row('Fuel', esc(v.fuelType)) : ''}${v.colour ? row('Colour', esc(v.colour)) : ''}
+    ${row('Valuation', l.valuation ? esc(`${{ comparables: 'Similar listings', autograb: 'AutoGrab', manual: 'Entered by you' }[l.valuation.method] || l.valuation.method}${l.valuation.compCount ? ` · ${l.valuation.compCount} cars` : ''}`) : '—')}
+    ${l.valuation?.low ? row('Market range', `${money(l.valuation.low)} – ${money(l.valuation.high)}`) : ''}
+    ${(l.priceHistory || []).length > 1 ? row('Price history', l.priceHistory.map(p => money(p.price)).join(' → ')) : ''}
+  </div>
+  ${l.description ? `<details><summary>Seller’s description</summary><p style="white-space:pre-wrap;color:var(--text-2);padding:0 4px">${esc(l.description)}</p></details>` : ''}`);
+
+  // Deal + documents (once talking)
+  if (!['draft', 'needs_valuation', 'rejected'].includes(l.stage)) {
+    const ck = Object.fromEntries(l.checklist.items.map(i => [i.key, i]));
+    const margin = d.salePrice && d.agreedPrice ? d.salePrice - d.agreedPrice : null;
+    h.push(`<div class="group-t">Price</div><div class="group">
+      ${inRow('Your max (private)', 'maxBuyPrice', d.maxBuyPrice, 'number', '$0')}
+      ${inRow('Agreed price', 'agreedPrice', d.agreedPrice, 'number', '$0')}
+      ${inRow('Sale date', 'agreedDate', (d.agreedDate || '').slice(0, 10), 'date')}
+    </div><div class="group-f">Your max is never shown to the seller or used in suggested replies.</div>
+
+    <div class="group-t">Paperwork</div><div class="group">
+      ${inRow('Purchase agreement', 'agreementStatus', d.agreementStatus, 'text', 'Sent / signed')}
+      ${inRow('Inspector', 'inspector', d.inspector, 'text', 'Me or 3rd party')}
+      ${inRow('Inspection date', 'inspectionDate', d.inspectionDate, 'date')}
+      ${inRow('Inspection result', 'inspectionResult', d.inspectionResult, 'text', 'Passed')}
+    </div>
+
+    <div class="group-t">Documents</div><div class="group">
+      ${swRow('Registration papers', 'registration', docs.registration)}
+      ${swRow('Licence copy', 'licence', docs.licence)}
+      ${swRow('Bank details', 'bankDetails', docs.bankDetails)}
+      ${swRow('Owned by a company', 'companyOwned', docs.companyOwned)}
+      ${docs.companyOwned ? swRow('Tax invoice incl. GST', 'taxInvoice', docs.taxInvoice) : ''}
+      ${swRow('Finance owing', 'financeOwing', docs.financeOwing)}
+      ${docs.financeOwing ? swRow('Payout letter', 'payoutLetter', docs.payoutLetter, ck.payoutLetter?.problem) : ''}
+      ${docs.financeOwing ? `<label class="row"><span class="l">Payout valid until</span><input type="date" data-doc="payoutValidUntil" value="${esc(docs.payoutValidUntil || '')}" onchange="autosave(true)"></label>` : ''}
+    </div><div class="group-f">${l.checklist.complete ? '✓ Ready to transact' : `${l.checklist.items.filter(i => !i.done).length} still needed before payment`}</div>
+
+    <div class="group-t">Resale</div><div class="group">
+      ${inRow('Easy Cars stock #', 'dmsStockNumber', d.dmsStockNumber, 'text', '—')}
+      ${inRow('Dealer offers', 'dealerBids', d.dealerBids, 'text', 'Dealer A $41k, Dealer B…')}
+      ${inRow('Buying dealer', 'buyingDealer', d.buyingDealer, 'text', '—')}
+      ${inRow('Sale price', 'salePrice', d.salePrice, 'number', '$0')}
+      ${inRow('Invoice #', 'invoiceNumber', d.invoiceNumber, 'text', '—')}
+      ${inRow('Transport', 'transport', d.transport, 'text', 'Carrier & date')}
+      ${row('Margin', margin == null ? '—' : `<b style="color:${margin > 0 ? 'var(--green)' : 'var(--red)'}">${money(margin)}</b>`)}
+    </div>`);
+  }
+
+  h.push(`<div class="group-t">Notes</div><textarea class="txt" id="notes" placeholder="Add a note" onchange="autosave()">${esc(l.notes || '')}</textarea>`);
+
+  if (!off || l.stage === 'rejected') {
+    h.push(`<div class="group-t">Move to</div><div class="group"><label class="row"><span class="l">Stage</span><select id="stage" onchange="advance(this.value)">
+      ${meta.stages.map(s => `<option value="${s.key}" ${s.key === l.stage ? 'selected' : ''}>${s.step ? s.step + ' · ' : ''}${esc(s.label)}</option>`).join('')}</select></label></div>`);
+  }
+
+  if ((l.history || []).length) {
+    h.push(`<details><summary>Activity</summary><div class="group">${l.history.slice().reverse().map(x => row(esc(stageLabel(x.to)) + (x.note ? `<span class="hint" style="color:var(--text-2)">${esc(x.note)}</span>` : ''), ago(x.at))).join('')}</div></details>`);
+  }
+
+  h.push('</div>');
+  const scroll = $('sheet').querySelector('.sh-body')?.scrollTop || 0;
+  $('sheet').innerHTML = h.join('');
+  $('sheet').querySelector('.sh-body').scrollTop = scroll;
+  smsLen();
+}
+
+function smsLen() { const s = $('sms'), o = $('smslen'); if (s && o) o.textContent = `${s.value.length} · ${Math.ceil(s.value.length / 153) || 1} SMS`; }
+function pickCh(b) { b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }
+const channel = () => $('rch')?.querySelector('.on')?.dataset.ch || 'sms';
+
+function collectDrafts() {
+  return { sms: $('sms').value, ...($('esub') ? { email: { subject: $('esub').value, body: $('ebody').value } } : {}) };
+}
+async function saveDrafts() { current = await api('/api/leads/' + current.id, { method: 'PATCH', body: { drafts: collectDrafts() } }); toast('Saved'); }
+
+async function approve() {
+  const l = current, canSms = !!l.seller.phone, canEmail = !!l.seller.email;
+  await api('/api/leads/' + l.id, { method: 'PATCH', body: { drafts: collectDrafts() } });
+  let channels = [canSms && 'sms', canEmail && 'email'].filter(Boolean);
+  if (!channels.length) {
+    try { await navigator.clipboard.writeText($('sms').value); } catch {}
+    if (l.seller.profileUrl) window.open(l.seller.profileUrl, '_blank', 'noopener');
+    if (!await dialog({ title: 'Message copied', text: 'Paste it into Marketplace, then mark it as sent.', ok: 'Mark as sent' })) return;
+    channels = ['manual'];
+  }
+  const r = await api('/api/leads/' + l.id + '/approve', { method: 'POST', body: { channels } });
+  const failed = Object.entries(r.results).filter(([, v]) => v !== 'sent');
+  toast(failed.length ? `Not sent: ${failed.map(([k, v]) => `${k} (${v})`).join(', ')}` : 'Sent ✓');
+  current = r.lead; draw(); load();
+  if (!failed.length) setTimeout(nextInQueue, 700);
+}
+function nextInQueue() {
+  const next = leads.filter(l => l.stage === 'draft' && l.id !== current?.id).sort((a, b) => (b.discountPct ?? 0) - (a.discountPct ?? 0))[0];
+  if (next) openLead(next.id); else { closeLead(); toast('All caught up ✓'); }
+}
+async function reject() {
+  const reason = await dialog({ title: 'Pass on this car?', text: 'It moves to Passed. You can bring it back later.', input: 'Reason (optional)', ok: 'Pass', danger: true });
+  if (reason === null) return;
+  await api('/api/leads/' + current.id + '/reject', { method: 'POST', body: { reason: reason || undefined } });
+  toast('Passed'); load(); nextInQueue();
+}
+async function setMarket() {
+  const v = $('mv').value; if (!v) return;
+  current = await api('/api/leads/' + current.id, { method: 'PATCH', body: { manualMarketValue: v } });
+  toast(current.stage === 'draft' ? 'Qualifies — ready to approve' : stageLabel(current.stage)); draw(); load();
+}
+async function suggest() {
+  toast('Writing a reply…');
+  const r = await api('/api/leads/' + current.id + '/suggest-reply', { method: 'POST', body: { channel: channel() } });
+  const t = $('reply'); t.value = r.text; t.dispatchEvent(new Event('input')); t.focus();
+}
+async function sendReply() {
+  const body = $('reply').value.trim(); if (!body) return;
+  const ch = channel();
+  if (ch === 'manual') { try { await navigator.clipboard.writeText(body); } catch {} toast('Copied. Paste it into Marketplace'); }
+  current = await api('/api/leads/' + current.id + '/message', { method: 'POST', body: { channel: ch, body } });
+  if (ch !== 'manual') toast('Sent ✓');
+  draw();
+}
+
+let saveT;
+async function saveNow() {
+  clearTimeout(saveT);
+  if (!document.querySelector('[data-deal],[data-doc],#notes')) return;
+  const deal = {}, documents = {};
+  document.querySelectorAll('[data-deal]').forEach(i => { deal[i.dataset.deal] = i.type === 'number' ? (i.value ? Number(i.value) : null) : i.value || null; });
+  document.querySelectorAll('[data-doc]').forEach(i => { documents[i.dataset.doc] = i.type === 'checkbox' ? i.checked : i.value || null; });
+  current = await api('/api/leads/' + current.id, { method: 'PATCH', body: { deal, documents, notes: $('notes')?.value } });
+}
+function autosave(redraw) {
+  clearTimeout(saveT);
+  saveT = setTimeout(async () => { await saveNow(); if (redraw) draw(); }, redraw ? 0 : 250);
+}
+async function advance(stage) {
+  await saveNow();
+  try {
+    current = await api('/api/leads/' + current.id + '/stage', { method: 'POST', body: { stage } });
+    toast(stageLabel(stage) + ' ✓');
+  } catch { if ($('stage')) $('stage').value = current.stage; return; }
+  draw(); load();
+}
+
+// ── boot ──
+if (token) load().catch(() => {}); else signInScreen();
+</script>
+</body>
+</html>
