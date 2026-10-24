@@ -53,7 +53,7 @@ async function qualify(lead, pool) {
   } else if (lead.discountPct < CRITERIA.minDiscountPct) {
     lead.stage = 'rejected';
     lead.rejectReason = `Not far enough below market (${lead.discountPct}% vs ${CRITERIA.minDiscountPct}% needed)`;
-  } else if (!lead.seller.phone && !lead.seller.email && !lead.seller.profileUrl) {
+  } else if (!lead.seller.phone && !lead.seller.email && !lead.seller.profileUrl && !lead.url) {
     lead.stage = 'rejected';
     lead.rejectReason = 'No way to contact seller';
   } else {
@@ -280,10 +280,17 @@ export async function ingest(items, source) {
   }
 
   // Pass 2: qualify anything we haven't contacted yet (but leave manual rejections alone)
+  // A few at a time, since AI valuations make a network call per car
   const pool = [...byId.values()];
+  const queue = [...touched];
+  const worker = async () => {
+    for (let lead; (lead = queue.shift());) {
+      const manuallyRejected = lead.stage === 'rejected' && lead.history?.some(h => h.to === 'rejected');
+      if (PRE_CONTACT.includes(lead.stage) && !manuallyRejected) await qualify(lead, pool);
+    }
+  };
+  await Promise.all(Array.from({ length: 6 }, worker));
   for (const lead of touched) {
-    const manuallyRejected = lead.stage === 'rejected' && lead.history?.some(h => h.to === 'rejected');
-    if (PRE_CONTACT.includes(lead.stage) && !manuallyRejected) await qualify(lead, pool);
     await saveLead(lead);
     summary.byStage[lead.stage] = (summary.byStage[lead.stage] || 0) + 1;
   }

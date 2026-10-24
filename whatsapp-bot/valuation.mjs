@@ -3,10 +3,15 @@
 //   1. AutoGrab (if AUTOGRAB_API_KEY is set) — real AU retail/trade data
 //   2. Comparable listings — other ingested listings of the same make/model,
 //      adjusted for year and kms, median taken
-//   3. Nothing — lead is parked as "needs valuation" for a manual figure.
-// We never make up a number: a wrong "below market" call means emailing the wrong sellers.
+//   3. AI estimate (if OPENAI_API_KEY is set) — labelled "AI estimate", low confidence,
+//      so it's obvious in the dashboard that the figure needs checking before approving
+//   4. Nothing — lead is parked as "needs valuation" for a manual figure.
 
-const { AUTOGRAB_API_KEY } = process.env;
+import OpenAI from 'openai';
+
+const { AUTOGRAB_API_KEY, OPENAI_API_KEY } = process.env;
+const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
+const AI_VALUATION_DAYS = 7; // re-use an AI estimate for a week instead of asking again every day
 
 const COMP_WINDOW_DAYS = 60;
 const YEAR_ADJ = 0.07;     // ~7% value per model year
@@ -105,6 +110,17 @@ export async function valueListing(listing, pool) {
     }
   }
   if (!valuation) valuation = compValuation(listing, pool);
+  if (!valuation) {
+    const prev = listing.valuation;
+    const fresh = prev?.method === 'ai' && prev.km === listing.vehicle.km &&
+      Date.now() - new Date(prev.valuedAt).getTime() < AI_VALUATION_DAYS * 86400000;
+    if (fresh) return { valuation: prev, discountPct: discountFor(listing.askingPrice, prev.market) };
+    try {
+      valuation = await aiValuation(listing);
+    } catch (err) {
+      console.error('AI valuation failed:', err.message);
+    }
+  }
   if (!valuation) return { valuation: null, discountPct: null };
 
   valuation.valuedAt = new Date().toISOString();
@@ -114,4 +130,46 @@ export async function valueListing(listing, pool) {
 export function discountFor(askingPrice, market) {
   if (!askingPrice || !market) return null;
   return Math.round(((market - askingPrice) / market) * 1000) / 10; // one decimal, positive = below market
+}
+
+// Asks for a typical Australian private-sale price. Deliberately not given the asking price,
+// so the estimate isn't anchored to the number we're judging.
+async function aiValuation(listing) {
+  if (!openai) return null;
+  const v = listing.vehicle;
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    max_tokens: 150,
+    temperature: 0,
+    response_format: { type: 'json_object' },
+    messages: [
+      {
+        role: 'system',
+        content: `You estimate Australian used-car prices. Given a vehicle, return the typical PRIVATE-SALE price in AUD it would sell for today in Australia (not dealer retail, not trade-in).
+Return JSON: {"market": number, "low": number, "high": number, "confidence": "low"|"medium"}.
+Use "low" confidence if you are unsure of this exact model/variant/year. Return {"market": null} if you cannot estimate.`,
+      },
+      {
+        role: 'user',
+        content: [
+          `${v.year} ${v.make} ${v.model} ${v.variant || ''}`.trim(),
+          `${v.km?.toLocaleString()} km`,
+          [v.transmission, v.fuelType, v.bodyType].filter(Boolean).join(', '),
+          `Condition: ${v.condition}`,
+          listing.location?.state ? `State: ${listing.location.state}` : '',
+        ].filter(Boolean).join('\n'),
+      },
+    ],
+  });
+  const out = JSON.parse(response.choices[0].message.content);
+  if (!out.market || out.market < 1000) return null;
+  const round = n => Math.round(n / 100) * 100;
+  return {
+    method: 'ai',
+    market: round(out.market),
+    low: out.low ? round(out.low) : null,
+    high: out.high ? round(out.high) : null,
+    confidence: 'low', // never trusted above "low" — it's a starting point, not market data
+    km: v.km,
+  };
 }

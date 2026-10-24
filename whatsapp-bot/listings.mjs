@@ -17,13 +17,54 @@ const MAKE_NAMES = { vw: 'Volkswagen', mercedes: 'Mercedes-Benz', 'mercedes-benz
 
 // Words in the title/description that change whether we want the car
 const RISK_FLAGS = [
-  { flag: 'written_off', re: /written[\s-]?off|wovr|repairable write|statutory write|salvage/i, reject: true },
-  { flag: 'damaged', re: /hail|accident|crash|flood|smash|panel damage|needs (?:work|repair)|not running|mechanic special/i },
+  { flag: 'written_off', re: /written[\s-]?off|wovr|wovi|repairable write|statutory write|salvage/i, reject: true },
+  { flag: 'damaged', re: /hail|accident|crash|flood|smash|panel damage|needs (?:work|repair)|not running|mechanic special|\bdent\b/i },
   { flag: 'no_rego', re: /no rego|unregistered|rego expired|without rego/i },
-  { flag: 'finance_owing', re: /finance owing|still on finance|payout|owe on/i },
+  { flag: 'finance_owing', re: /finance owing|still on finance|currently has finance|payout|owe on|money owing/i },
   { flag: 'swap_only', re: /swap only|swaps? (?:wanted|considered)|trade for/i },
-  { flag: 'dealer', re: /\blmct\b|\bdealer (?:licen[cs]e|lic)\b|finance available|warranty included|we are a dealer/i, reject: true },
+  {
+    flag: 'dealer',
+    re: /\blmct\b|licen[cs]ed (?:motor )?dealer|\bdealer (?:licen[cs]e|lic|sale|warranty)\b|we are a dealer|\b(?:DL|MD|MVD)[\s:#]*\d{4,}|finance (?:available|options)|trade[- ]ins? (?:welcome|&|offered)|we can deliver|on the yard|car sales\b|\bmotors\b[^.\n]{0,20}\.com|platform contact options to connect with the dealer/i,
+    reject: true,
+  },
 ];
+
+// "No finance owing", "no accidents, no written off", "clean PPSR – no write-off history" are good news, not flags
+const NEGATION = /\b(?:no|not|never|nil|zero|without|clear)\b[^.\n,;!]{0,30}/gi;
+const NEGATABLE = /finance|money owing|written[\s-]?off|write[\s-]?off|accident|damage|hail|dent/i;
+const stripNegated = text => text.replace(NEGATION, m => NEGATABLE.test(m) && !/wov[ri]/i.test(m) ? ' ' : m);
+
+const NOT_CAR_BODY = /motor ?cycle|motorbike|scooter|atv|quad|boat|caravan|trailer|jet ?ski/i;
+const BIKE_MAKES = ['yamaha', 'beta', 'ktm', 'kawasaki', 'ducati', 'harley-davidson', 'husqvarna', 'triumph', 'aprilia', 'gasgas', 'sherco', 'royal enfield', 'cfmoto'];
+
+// Feed models can be "q5 sportback s 40tdi quattro" or "2024 toyota vellfire hybrid": keep the model, move the rest to variant
+const TWO_WORD_MODELS = { 'landcruiser prado': 'Prado', 'land cruiser': 'LandCruiser', 'model y': 'Model Y', 'model 3': 'Model 3', 'model s': 'Model S', 'model x': 'Model X', 'yaris cross': 'Yaris Cross', 'cx 3': 'CX-3', 'cx 30': 'CX-30', 'cx 5': 'CX-5', 'cx 60': 'CX-60', 'cx 8': 'CX-8', 'cx 9': 'CX-9', 'mg 4': 'MG4', 'mg 5': 'MG5' };
+const MODEL_NAMES = { cx60: 'CX-60', cx5: 'CX-5', cx30: 'CX-30', cx3: 'CX-3', cx8: 'CX-8', cx9: 'CX-9', hilux: 'HiLux', rav4: 'RAV4', 'x-trail': 'X-Trail', 'd-max': 'D-Max', 'bt-50': 'BT-50', 'mx-5': 'MX-5', 'cr-v': 'CR-V', 'hr-v': 'HR-V', hrv: 'HR-V', crv: 'CR-V', landcruiser: 'LandCruiser', 't-roc': 'T-Roc', mg4: 'MG4', mg5: 'MG5', mg3: 'MG3', zst: 'ZST', zs: 'ZS', i30n: 'i30 N', i30: 'i30', y: 'Model Y' };
+
+const titleCase = s => s && s === s.toLowerCase() ? s.replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase()) : s;
+
+function splitModel(rawModel, make, rawVariant) {
+  if (!rawModel) return { model: null, variant: rawVariant || null };
+  let m = String(rawModel).replace(/[•|(),]/g, ' ').replace(/\b(19|20)\d\d\b/g, ' ');
+  if (make) m = m.replace(new RegExp(`\\b${make.replace(/[-]/g, '[- ]?')}\\b`, 'ig'), ' ');
+  m = m.replace(/\s+/g, ' ').trim();
+  const lower = m.toLowerCase();
+  for (const [k, v] of Object.entries(TWO_WORD_MODELS)) {
+    if (lower === k || lower.startsWith(k + ' ')) return { model: v, variant: rawVariant || titleCase(m.slice(k.length).trim()) || null };
+  }
+  const [first, ...rest] = m.split(' ');
+  const key = first.toLowerCase();
+  const model = MODEL_NAMES[key] || MODEL_NAMES[key.replace(/-/g, '')] || titleCase(first);
+  return { model, variant: rawVariant || titleCase(rest.join(' ')) || null };
+}
+
+// Pull a seller's number / email out of free text ("call 0412 345 678", keycap emoji digits)
+function contactFromText(text) {
+  const t = String(text || '').replace(/️?⃣/g, '').replace(/️/g, '');
+  const phone = t.match(/(?:\+?61\s?|0)4\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/)?.[0] || null;
+  const email = t.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)?.[0] || null;
+  return { phone, email };
+}
 
 export function normaliseMake(raw) {
   if (!raw) return null;
@@ -116,9 +157,20 @@ export function normaliseListing(raw, source = 'facebook_marketplace') {
   const fromTitle = parseTitle(raw.title);
   const seller = raw.seller || {};
   const text = `${raw.title || ''}\n${raw.description || ''}`;
+  const flagText = stripNegated(text);
 
-  const flags = RISK_FLAGS.filter(f => f.re.test(text)).map(f => f.flag);
+  const flags = RISK_FLAGS.filter(f => f.re.test(flagText)).map(f => f.flag);
   if (seller.is_dealer) flags.push('dealer');
+
+  // A make like "Honda HRV" or "MG3 , AUTO, Good Mechanically" means the feed mis-split the title
+  const rawMake = raw.make && /^[a-z-]+$/i.test(String(raw.make).trim()) ? raw.make : null;
+  const make = normaliseMake(rawMake) || fromTitle.make || null;
+  const { model, variant } = rawMake
+    ? splitModel(raw.model, make, raw.variant || raw.trim)
+    : { model: fromTitle.model ? (MODEL_NAMES[fromTitle.model.toLowerCase()] || fromTitle.model) : null, variant: fromTitle.variant || null };
+
+  if (NOT_CAR_BODY.test(raw.body_type || '') || BIKE_MAKES.includes(String(make || '').toLowerCase())) flags.push('not_car');
+  const found = contactFromText(raw.description);
 
   return {
     id: leadIdFor(raw, source),
@@ -131,9 +183,9 @@ export function normaliseListing(raw, source = 'facebook_marketplace') {
     listedAt: raw.listed_at || null,
     vehicle: {
       year: toNumber(raw.year) || fromTitle.year || null,
-      make: normaliseMake(raw.make) || fromTitle.make || null,
-      model: raw.model || fromTitle.model || null,
-      variant: raw.variant || raw.trim || fromTitle.variant || null,
+      make,
+      model,
+      variant,
       km: toNumber(raw.odometer_km ?? raw.km ?? raw.mileage ?? raw.odometer),
       condition: parseCondition(raw.condition, text),
       bodyType: raw.body_type || null,
@@ -147,8 +199,8 @@ export function normaliseListing(raw, source = 'facebook_marketplace') {
     location: parseLocation(raw.location, raw),
     seller: {
       name: seller.name || raw.seller_name || null,
-      phone: normalisePhone(seller.phone || raw.seller_phone || raw.phone),
-      email: normaliseEmail(seller.email || raw.seller_email || raw.email),
+      phone: normalisePhone(seller.phone || raw.seller_phone || raw.phone || found.phone),
+      email: normaliseEmail(seller.email || raw.seller_email || raw.email || found.email),
       profileUrl: seller.profile_url || raw.seller_profile_url || null,
       isDealer: !!seller.is_dealer,
     },
@@ -171,8 +223,9 @@ export function checkCriteria(listing, now = new Date()) {
   if (!v.make || !v.model) reasons.push('Make/model unknown');
   if (!listing.askingPrice) reasons.push('No asking price');
 
+  if (listing.flags.includes('not_car')) reasons.push('Not a car');
   for (const f of RISK_FLAGS) {
-    if (f.reject && listing.flags.includes(f.flag)) reasons.push(`Flagged: ${f.flag.replace('_', ' ')}`);
+    if (f.reject && listing.flags.includes(f.flag)) reasons.push(f.flag === 'dealer' ? 'Dealer listing' : `Flagged: ${f.flag.replace('_', ' ')}`);
   }
 
   return { pass: reasons.length === 0, reasons };

@@ -261,7 +261,7 @@ const kmFmt = n => n == null ? '— km' : Math.round(n).toLocaleString('en-AU') 
 const carName = l => [l.vehicle.year, l.vehicle.make, l.vehicle.model].filter(Boolean).join(' ');
 const stageLabel = k => meta?.stages.find(s => s.key === k)?.label || k;
 const stageStep = k => meta?.stages.find(s => s.key === k)?.step || 0;
-const flagLabel = f => ({ finance_owing: 'Finance owing', damaged: 'Possible damage', no_rego: 'No rego', swap_only: 'Swap', written_off: 'Written off', dealer: 'Dealer' }[f] || f);
+const flagLabel = f => ({ finance_owing: 'Finance owing', damaged: 'Possible damage', no_rego: 'No rego', swap_only: 'Swap', written_off: 'Written off', dealer: 'Dealer', not_car: 'Not a car' }[f] || f);
 const ago = iso => { const s = (Date.now() - new Date(iso)) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm ago' : s < 86400 ? Math.floor(s / 3600) + 'h ago' : Math.floor(s / 86400) + 'd ago'; };
 const photo = l => (l.photos || [])[0];
 const mono = l => esc((l.vehicle.make || '?').slice(0, 1));
@@ -390,7 +390,7 @@ function card(l) {
       ${l.unread ? '<span class="unread">New reply</span>' : ''}</div>
     <div class="cb">
       <div><h3>${esc(carName(l))}</h3><div class="sub">${esc(v.variant || '')}${v.variant ? ' · ' : ''}${kmFmt(v.km)}${v.condition && v.condition !== 'Unknown' ? ' · ' + esc(v.condition) : ''}</div></div>
-      <div class="prices"><span class="ask num">${money(l.deal?.agreedPrice || l.askingPrice)}</span><span class="mkt num">${l.deal?.agreedPrice ? 'Agreed' : mkt ? 'Market ' + money(mkt) : ''}</span></div>
+      <div class="prices"><span class="ask num">${money(l.deal?.agreedPrice || l.askingPrice)}</span><span class="mkt num">${l.deal?.agreedPrice ? 'Agreed' : mkt ? (l.valuation.method === 'ai' ? 'AI est. ' : 'Market ') + money(mkt) : ''}</span></div>
       ${mkt ? `<div class="meter"><b style="width:${pct}%"></b></div>` : ''}
       ${l.alerts.map(a => `<div class="alert">⚠︎ ${esc(a)}</div>`).join('')}
       ${last && tab === 'talking' ? `<div class="sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${last.dir === 'in' ? '' : 'You: '}${esc(last.body)}</div>` : ''}
@@ -433,7 +433,7 @@ function draw() {
 
   h.push(`<div class="deal-box">
     <div><div class="k">Asking</div><div class="v num">${money(l.askingPrice)}</div></div>
-    <div><div class="k">Market value</div><div class="v num">${money(l.valuation?.market)}</div></div>
+    <div><div class="k">${l.valuation?.method === 'ai' ? 'AI estimate' : 'Market value'}</div><div class="v num">${money(l.valuation?.market)}</div></div>
     <div><div class="k">${d.agreedPrice ? 'Agreed' : 'Potential'}</div><div class="v num ${l.valuation?.market > (d.agreedPrice || l.askingPrice) ? 'g' : ''}">${d.agreedPrice ? money(d.agreedPrice) : l.valuation?.market ? money(l.valuation.market - l.askingPrice) : '—'}</div></div>
   </div>`);
 
@@ -480,14 +480,14 @@ function draw() {
     ${row('Name', esc(l.seller.name))}
     ${row('Mobile', l.seller.phone ? `<a href="tel:${esc(l.seller.phone)}">${esc(l.seller.phone)}</a>` : '—')}
     ${row('Email', l.seller.email ? `<a href="mailto:${esc(l.seller.email)}">${esc(l.seller.email)}</a>` : '—')}
-    ${l.seller.profileUrl ? row('Marketplace', `<a href="${esc(l.seller.profileUrl)}" target="_blank" rel="noopener">View profile</a>`) : ''}
+    ${l.seller.profileUrl || l.url ? row('Marketplace', `<a href="${esc(l.seller.profileUrl || l.url)}" target="_blank" rel="noopener">${l.seller.profileUrl ? 'View profile' : 'Message on listing'}</a>`) : ''}
   </div>`);
 
   // Vehicle
   h.push(`<div class="group-t">Vehicle</div><div class="group">
     ${row('Odometer', kmFmt(v.km))}${row('Condition', esc(v.condition))}
     ${v.bodyType ? row('Body', esc(v.bodyType)) : ''}${v.transmission ? row('Transmission', esc(v.transmission)) : ''}${v.fuelType ? row('Fuel', esc(v.fuelType)) : ''}${v.colour ? row('Colour', esc(v.colour)) : ''}
-    ${row('Valuation', l.valuation ? esc(`${{ comparables: 'Similar listings', autograb: 'AutoGrab', manual: 'Entered by you' }[l.valuation.method] || l.valuation.method}${l.valuation.compCount ? ` · ${l.valuation.compCount} cars` : ''}`) : '—')}
+    ${row('Valuation', l.valuation ? esc(`${{ comparables: 'Similar listings', autograb: 'AutoGrab', manual: 'Entered by you', ai: 'AI estimate — check before approving' }[l.valuation.method] || l.valuation.method}${l.valuation.compCount ? ` · ${l.valuation.compCount} cars` : ''}`) : '—')}
     ${l.valuation?.low ? row('Market range', `${money(l.valuation.low)} – ${money(l.valuation.high)}`) : ''}
     ${(l.priceHistory || []).length > 1 ? row('Price history', l.priceHistory.map(p => money(p.price)).join(' → ')) : ''}
   </div>
@@ -565,7 +565,7 @@ async function approve() {
   let channels = [canSms && 'sms', canEmail && 'email'].filter(Boolean);
   if (!channels.length) {
     try { await navigator.clipboard.writeText($('sms').value); } catch {}
-    if (l.seller.profileUrl) window.open(l.seller.profileUrl, '_blank', 'noopener');
+    if (l.seller.profileUrl || l.url) window.open(l.seller.profileUrl || l.url, '_blank', 'noopener');
     if (!await dialog({ title: 'Message copied', text: 'Paste it into Marketplace, then mark it as sent.', ok: 'Mark as sent' })) return;
     channels = ['manual'];
   }
