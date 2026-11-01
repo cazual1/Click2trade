@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>Click2Trade Dealer</title>
+<style>
+:root{
+  --bg:#f5f5f7;--surface:#ffffff;--fill:rgba(118,118,128,.12);--fill-2:rgba(118,118,128,.08);
+  --line:rgba(60,60,67,.12);--text:#1d1d1f;--text-2:#6e6e73;--text-3:#a1a1a6;
+  --blue:#0071e3;--blue-tint:rgba(0,113,227,.1);--green:#28a745;--green-tint:rgba(40,167,69,.12);
+  --orange:#f56300;--orange-tint:rgba(245,99,0,.1);--red:#e30000;--red-tint:rgba(227,0,0,.08);
+  --glass:rgba(245,245,247,.72);--shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.14);--r:18px;--r-sm:12px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',Inter,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#000;--surface:#1c1c1e;--fill:rgba(118,118,128,.24);--fill-2:rgba(118,118,128,.14);
+  --line:rgba(84,84,88,.48);--text:#f5f5f7;--text-2:#98989d;--text-3:#636366;
+  --blue:#2997ff;--blue-tint:rgba(41,151,255,.16);--green:#30d158;--green-tint:rgba(48,209,88,.16);
+  --orange:#ff9f0a;--orange-tint:rgba(255,159,10,.16);--red:#ff453a;--red-tint:rgba(255,69,58,.16);
+  --glass:rgba(22,22,24,.72);--shadow:none;--shadow-lg:0 12px 48px rgba(0,0,0,.6);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:15px/1.47 var(--font);letter-spacing:-.01em;-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:var(--blue);text-decoration:none}
+input,select,textarea{font:inherit;color:var(--text)}
+.num{font-variant-numeric:tabular-nums}
+
+.bar{position:sticky;top:0;z-index:10;background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line)}
+.bar-in{max-width:1200px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:16px;letter-spacing:-.02em}
+.logo i{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0071e3,#34aadc);display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px;font-weight:700}
+.logo small{font-weight:500;color:var(--text-2);font-size:14px}
+.acct{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-2)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-weight:600;color:var(--text)}
+
+main{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.hero h1{font-size:40px;line-height:1.1;font-weight:700;letter-spacing:-.03em}
+.hero p{color:var(--text-2);font-size:17px;margin-top:6px}
+.seg{display:inline-flex;background:var(--fill);border-radius:10px;padding:2px}
+.seg button{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:500;white-space:nowrap}
+.seg button.on{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+.seg button .c{color:var(--text-2);margin-left:5px;font-weight:400}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.card:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(0,0,0,.04),0 16px 32px rgba(0,0,0,.08)}
+.ph{position:relative;aspect-ratio:4/3;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;overflow:hidden}
+.ph img,.gal img{position:relative;width:100%;height:100%;object-fit:contain}
+.blur{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(22px) saturate(1.3);opacity:.55}
+.mono{font-size:44px;font-weight:700;letter-spacing:-.04em;color:var(--text-3)}
+img~.mono{display:none}
+.ph .tl{position:absolute;top:12px;left:12px;display:flex;gap:6px}
+.ph .pc{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.badge.g{background:var(--green-tint);color:var(--green)}.badge.o{background:var(--orange-tint);color:var(--orange)}
+.badge.b{background:var(--blue-tint);color:var(--blue)}.badge.n{background:var(--fill);color:var(--text-2)}.badge.r{background:var(--red-tint);color:var(--red)}
+.ph .badge{background:rgba(255,255,255,.9);backdrop-filter:blur(12px)}
+@media (prefers-color-scheme:dark){.ph .badge{background:rgba(0,0,0,.6)}}
+.cb{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.cb h3{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.sub{font-size:13px;color:var(--text-2)}
+.row2{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.big{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.clock{font-size:13px;color:var(--text-2);display:flex;align-items:center;gap:6px}
+.clock.soon{color:var(--orange);font-weight:600}
+
+.empty{text-align:center;padding:80px 20px;color:var(--text-2)}
+.empty .ic{width:64px;height:64px;border-radius:50%;background:var(--fill-2);display:grid;place-items:center;margin:0 auto 16px;font-size:28px}
+.empty h3{font-size:20px;color:var(--text);font-weight:600;margin-bottom:4px}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;top:12px;right:12px;bottom:12px;width:min(620px,calc(100% - 24px));background:var(--bg);border-radius:22px;box-shadow:var(--shadow-lg);z-index:21;transform:translateX(calc(100% + 24px));transition:transform .45s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;overflow:hidden}
+.sheet.on{transform:none}
+.sh-head{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line)}
+.sh-head .t{font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.x{width:30px;height:30px;border-radius:50%;background:var(--fill);display:grid;place-items:center;color:var(--text-2);font-size:17px;flex-shrink:0}
+.sh-body{overflow-y:auto;padding:0 20px 40px;flex:1}
+.gal{margin:0 -20px;position:relative;aspect-ratio:4/3;max-height:52vh;width:calc(100% + 40px);background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;overflow:hidden;cursor:zoom-in}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:18px;display:grid;place-items:center;z-index:2}
+.nav.p{left:12px}.nav.n{right:12px}
+.cnt{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;padding:3px 9px;border-radius:999px;z-index:2}
+.thumbs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.thumbs button{flex:0 0 64px;height:48px;border-radius:8px;overflow:hidden;background:var(--fill);opacity:.55}
+.thumbs button.on{opacity:1;outline:2px solid var(--blue);outline-offset:2px}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+.sh-title{padding:20px 0 4px}
+.sh-title h2{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+.sh-title p{color:var(--text-2);margin-top:4px}
+
+.bidbox{background:var(--surface);border-radius:var(--r);padding:20px;margin:16px 0;box-shadow:var(--shadow)}
+.bidbox .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.bidbox .k{font-size:12px;color:var(--text-2);font-weight:500}
+.bidbox .v{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-top:2px}
+.state{border-radius:12px;padding:10px 14px;font-weight:600;font-size:14px;margin-bottom:14px}
+.state.g{background:var(--green-tint);color:var(--green)}.state.o{background:var(--orange-tint);color:var(--orange)}.state.n{background:var(--fill);color:var(--text-2)}.state.b{background:var(--blue-tint);color:var(--blue)}
+.amount{display:flex;align-items:center;background:var(--bg);border-radius:14px;padding:0 16px;height:56px;border:1px solid var(--line)}
+.amount span{font-size:24px;font-weight:600;color:var(--text-2)}
+.amount input{flex:1;border:0;background:none;outline:none;font-size:24px;font-weight:600;padding-left:4px;min-width:0}
+.amount:focus-within{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-tint)}
+.quick{display:flex;gap:8px;margin:10px 0 14px;flex-wrap:wrap}
+.quick button{height:32px;padding:0 14px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:500;color:var(--blue)}
+.fine{font-size:12px;color:var(--text-2);margin-top:10px;text-align:center}
+
+.group-t{font-size:13px;color:var(--text-2);text-transform:uppercase;letter-spacing:.02em;padding:24px 16px 7px}
+.group{background:var(--surface);border-radius:var(--r-sm);overflow:hidden;box-shadow:var(--shadow)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;min-height:44px;position:relative}
+.row+.row::before{content:'';position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}
+.row .r{color:var(--text-2);text-align:right}
+.row input{border:0;background:none;text-align:right;outline:none;color:var(--text-2);flex:1;min-width:0}
+.para{background:var(--surface);border-radius:var(--r-sm);padding:14px 16px;white-space:pre-wrap;box-shadow:var(--shadow);color:var(--text)}
+
+.sw{position:relative;width:51px;height:31px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;border-radius:999px;background:var(--fill);transition:background .25s}
+.sw span::after{content:'';position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15);transition:transform .25s}
+.sw input:checked+span{background:#34c759}
+.sw input:checked+span::after{transform:translateX(20px)}
+
+.btn{height:50px;padding:0 22px;border-radius:999px;background:var(--blue);color:#fff;font-size:17px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;transition:opacity .2s,transform .1s}
+.btn:active{transform:scale(.98)}.btn:hover{opacity:.92}
+.btn.sec{background:var(--fill);color:var(--blue)}
+.btn.sm{height:36px;font-size:14px;width:auto}
+.btn:disabled{opacity:.4;pointer-events:none}
+
+/* auth */
+.auth{min-height:100vh;display:grid;place-items:center;padding:32px 20px}
+.auth-c{width:min(420px,100%)}
+.auth-c .logo{justify-content:center;margin-bottom:22px}
+.auth-c .logo i{width:56px;height:56px;border-radius:14px;font-size:26px}
+.auth-c h1{font-size:30px;font-weight:700;letter-spacing:-.03em;text-align:center}
+.auth-c > p{color:var(--text-2);text-align:center;margin:6px 0 24px}
+.fld{display:block;margin-bottom:12px}
+.fld span{display:block;font-size:13px;color:var(--text-2);margin:0 4px 6px}
+.fld input,.fld select{width:100%;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px;font-size:16px;outline:none}
+.fld input:focus,.fld select:focus{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-tint)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--text-2);margin:6px 4px 16px}
+.check input{margin-top:3px;width:18px;height:18px;flex-shrink:0}
+.err{background:var(--red-tint);color:var(--red);border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:12px}
+.ok{background:var(--green-tint);color:var(--green);border-radius:12px;padding:14px;font-size:15px;margin-bottom:12px;text-align:center}
+.links{text-align:center;margin-top:18px;font-size:15px;display:flex;flex-direction:column;gap:10px}
+
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:35;display:none;place-items:center}
+.lb.on{display:grid}
+.lb img{max-width:100vw;max-height:100vh;object-fit:contain}
+.lb .x{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.16);color:#fff;z-index:2}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;background:rgba(29,29,31,.92);color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;font-weight:500;transition:all .35s cubic-bezier(.32,.72,0,1);z-index:40;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.dlg{position:fixed;inset:0;display:grid;place-items:center;z-index:30;background:rgba(0,0,0,.32);padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.dlg.on{opacity:1;pointer-events:auto}
+.dlg-c{background:var(--surface);border-radius:20px;width:min(340px,100%);padding:22px 20px 16px;text-align:center;box-shadow:var(--shadow-lg)}
+.dlg-c h4{font-size:17px;font-weight:600}.dlg-c p{font-size:13px;color:var(--text-2);margin-top:4px}
+.dlg-c .acts{display:flex;gap:10px;margin-top:16px}
+.dlg-c .btn{height:40px;font-size:15px}
+
+@media (max-width:600px){
+  .bar-in,main{padding-left:16px;padding-right:16px}
+  .hero h1{font-size:32px}
+  .sheet{top:auto;left:0;right:0;bottom:0;width:100%;height:94vh;border-radius:22px 22px 0 0;transform:translateY(100%)}
+  .bidbox .stats{grid-template-columns:1fr 1fr}
+  .acct .nm{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="scrim" id="scrim" onclick="closeSheet()"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true"></aside>
+<div class="lb" id="lb" onclick="if(event.target===this)closeLb()"></div>
+<div class="dlg" id="dlg"><div class="dlg-c" id="dlgc"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let token = '', me = null, cars = [], tab = 'open', current = null, gi = 0, pendingCar = null, refreshT, tickT;
+try { token = localStorage.getItem('c2t_dealer') || ''; } catch {}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => n == null ? '—' : '$' + Math.round(n).toLocaleString('en-AU');
+const kmFmt = n => n == null ? '— km' : Math.round(n).toLocaleString('en-AU') + ' km';
+const pic = src => src ? `<div class="blur" style="background-image:url('${esc(src)}')"></div><img loading="lazy" src="${esc(src)}" alt="" referrerpolicy="no-referrer" onerror="this.previousElementSibling?.remove();this.remove()">` : '';
+const mono = c => esc((c.make || '?').slice(0, 1));
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2800); }
+
+function left(iso) {
+  const ms = new Date(iso) - Date.now();
+  if (ms <= 0) return { text: 'Closed', soon: false, done: true };
+  const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+  const text = d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m ${String(sec).padStart(2, '0')}s`;
+  return { text: 'Closes in ' + text, soon: ms < 3600000, done: false };
+}
+
+function dialog({ title, text, ok = 'OK' }) {
+  return new Promise(resolve => {
+    $('dlgc').innerHTML = `<h4>${esc(title)}</h4>${text ? `<p>${esc(text)}</p>` : ''}<div class="acts"><button class="btn sec" id="dn">Cancel</button><button class="btn" id="dy">${esc(ok)}</button></div>`;
+    $('dlg').classList.add('on');
+    const done = v => { $('dlg').classList.remove('on'); resolve(v); };
+    $('dn').onclick = () => done(false); $('dy').onclick = () => done(true);
+  });
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && token) { signOut(true); throw new Error(data.error); }
+  if (!res.ok) throw new Error(data.error || 'Something went wrong');
+  return data;
+}
+
+// ── auth screens ──
+function authScreen(mode = 'login', msg = '') {
+  clearInterval(refreshT); clearInterval(tickT);
+  const head = `<div class="logo"><i>C</i></div>`;
+  const STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
+  let body = '';
+  if (mode === 'login') body = `
+    <h1>Dealer login</h1><p>See stock open for bids and place your offers.</p>
+    ${msg}
+    <form onsubmit="event.preventDefault();login()">
+      <label class="fld"><span>Email</span><input id="em" type="email" autocomplete="email" required></label>
+      <label class="fld"><span>Password</span><input id="pw" type="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit">Log in</button>
+    </form>
+    <div class="links"><a href="#" onclick="authScreen('signup');return false">New dealer? Create an account</a><a href="#" onclick="authScreen('forgot');return false" style="color:var(--text-2)">Forgot password?</a></div>`;
+  if (mode === 'signup') body = `
+    <h1>Create a dealer account</h1><p>For licensed motor dealers. We’ll verify your licence before your account goes live.</p>
+    ${msg}
+    <form onsubmit="event.preventDefault();signup()">
+      <label class="fld"><span>Business name</span><input id="bn" required autocomplete="organization"></label>
+      <div class="two"><label class="fld"><span>Dealer licence no.</span><input id="lic" required placeholder="LMCT / MD / DL"></label>
+      <label class="fld"><span>ABN <small>(optional)</small></span><input id="abn" inputmode="numeric"></label></div>
+      <label class="fld"><span>Your name</span><input id="cn" required autocomplete="name"></label>
+      <div class="two"><label class="fld"><span>Mobile</span><input id="ph" type="tel" required autocomplete="tel"></label>
+      <label class="fld"><span>State</span><select id="st">${STATES.map(s => `<option>${s}</option>`).join('')}</select></label></div>
+      <label class="fld"><span>Suburb</span><input id="sb" autocomplete="address-level2"></label>
+      <label class="fld"><span>Email</span><input id="em" type="email" required autocomplete="email"></label>
+      <label class="fld"><span>Password <small>(8+ characters)</small></span><input id="pw" type="password" required minlength="8" autocomplete="new-password"></label>
+      <label class="check"><input type="checkbox" id="ok1" required> I’m authorised to bid for this licensed motor dealer, and I understand that bids are binding if accepted.</label>
+      <button class="btn" type="submit">Create account</button>
+    </form>
+    <div class="links"><a href="#" onclick="authScreen('login');return false">Already have an account? Log in</a></div>`;
+  if (mode === 'forgot') body = `
+    <h1>Reset password</h1><p>We’ll email you a link to set a new password.</p>
+    ${msg}
+    <form onsubmit="event.preventDefault();forgot()">
+      <label class="fld"><span>Email</span><input id="em" type="email" required autocomplete="email"></label>
+      <button class="btn" type="submit">Send reset link</button>
+    </form>
+    <div class="links"><a href="#" onclick="authScreen('login');return false">Back to log in</a></div>`;
+  if (mode === 'reset') body = `
+    <h1>Set a new password</h1><p>&nbsp;</p>${msg}
+    <form onsubmit="event.preventDefault();resetPw()">
+      <label class="fld"><span>New password <small>(8+ characters)</small></span><input id="pw" type="password" required minlength="8" autocomplete="new-password"></label>
+      <button class="btn" type="submit">Save password</button>
+    </form>`;
+  if (mode === 'pending') body = `<h1>Thanks for signing up</h1><p></p>
+    <div class="ok">We’re checking your dealer licence. You’ll get an email as soon as your account is approved — usually within one business day.</div>
+    <div class="links"><a href="#" onclick="authScreen('login');return false">Back to log in</a></div>`;
+  $('app').innerHTML = `<div class="auth"><div class="auth-c">${head}${body}</div></div>`;
+  document.querySelector('.auth input')?.focus();
+}
+const errBox = e => `<div class="err">${esc(e.message || e)}</div>`;
+const busy = (on) => document.querySelectorAll('.auth .btn').forEach(b => b.disabled = on);
+
+async function login() {
+  busy(true);
+  try {
+    const r = await api('/api/dealer/login', { method: 'POST', body: { email: $('em').value, password: $('pw').value } });
+    token = r.token; try { localStorage.setItem('c2t_dealer', token); } catch {}
+    me = r.dealer; start();
+  } catch (e) { authScreen('login', errBox(e)); }
+}
+async function signup() {
+  busy(true);
+  try {
+    await api('/api/dealer/signup', { method: 'POST', body: { businessName: $('bn').value, licence: $('lic').value, abn: $('abn').value, contactName: $('cn').value, phone: $('ph').value, state: $('st').value, suburb: $('sb').value, email: $('em').value, password: $('pw').value } });
+    authScreen('pending');
+  } catch (e) {
+    const keep = Object.fromEntries(['bn', 'lic', 'abn', 'cn', 'ph', 'st', 'sb', 'em'].map(k => [k, $(k).value]));
+    authScreen('signup', errBox(e));
+    Object.entries(keep).forEach(([k, v]) => $(k).value = v);
+  }
+}
+async function forgot() {
+  busy(true);
+  try {
+    const r = await api('/api/dealer/forgot', { method: 'POST', body: { email: $('em').value } });
+    authScreen('login', `<div class="ok">${r.emailEnabled ? 'If that email has an account, a reset link is on its way.' : 'Password reset by email isn’t set up yet — please contact us to reset your password.'}</div>`);
+  } catch (e) { authScreen('forgot', errBox(e)); }
+}
+async function resetPw() {
+  busy(true);
+  try {
+    await api('/api/dealer/reset', { method: 'POST', body: { token: resetToken, password: $('pw').value } });
+    history.replaceState(null, '', location.pathname);
+    authScreen('login', `<div class="ok">Password updated — log in with your new password.</div>`);
+  } catch (e) { authScreen('reset', errBox(e)); }
+}
+async function signOut(expired) {
+  if (!expired) { try { await api('/api/dealer/logout', { method: 'POST' }); } catch {} }
+  token = ''; me = null; try { localStorage.removeItem('c2t_dealer'); } catch {}
+  closeSheet(true);
+  authScreen('login', expired ? `<div class="err">Your session expired — please log in again.</div>` : '');
+}
+
+// ── main ──
+async function start() {
+  if (!me) me = await api('/api/dealer/me');
+  $('app').innerHTML = `
+  <header class="bar"><div class="bar-in">
+    <div class="logo"><i>C</i>Click2Trade <small>Dealer</small></div>
+    <div class="acct"><span class="nm">${esc(me.businessName)}</span><button class="avatar" onclick="openSettings()" aria-label="Account">${esc((me.contactName || '?').slice(0, 1))}</button></div>
+  </div></header>
+  <main>
+    <section class="hero"><div><h1>Stock for bids</h1><p id="sum"></p></div><div class="seg" id="seg"></div></section>
+    <section class="grid" id="grid"></section>
+  </main>`;
+  await load();
+  clearInterval(refreshT); refreshT = setInterval(() => load(true), 20000);
+  clearInterval(tickT); tickT = setInterval(tick, 1000);
+  if (pendingCar) { openCar(pendingCar); pendingCar = null; }
+}
+
+async function load(quiet) {
+  try { cars = await api('/api/dealer/cars'); } catch (e) { if (!quiet) toast(e.message); return; }
+  render();
+  if (current && $('sheet').classList.contains('on')) {
+    const fresh = cars.find(c => c.id === current.id);
+    if (fresh && (fresh.bidCount !== current.bidCount || fresh.status !== current.status || fresh.closesAt !== current.closesAt)) { current = fresh; drawCar(true); }
+  }
+}
+
+function statusBadge(c) {
+  if (c.won) return '<span class="badge g">Won</span>';
+  if (c.status === 'sold') return '<span class="badge n">Sold</span>';
+  if (c.status !== 'open') return c.myBid ? `<span class="badge n">${c.leading ? 'Awaiting decision' : 'Closed'}</span>` : '<span class="badge n">Closed</span>';
+  if (c.myBid == null) return '';
+  return c.leading ? '<span class="badge g">You’re leading</span>' : '<span class="badge o">Outbid</span>';
+}
+
+function render() {
+  const open = cars.filter(c => c.status === 'open'), mine = cars.filter(c => c.myBid != null);
+  const leading = open.filter(c => c.leading).length;
+  $('sum').textContent = open.length ? `${open.length} car${open.length > 1 ? 's' : ''} open for bids${leading ? ` · leading on ${leading}` : ''}.` : 'No cars open for bids right now — we’ll email you when new stock lands.';
+  $('seg').innerHTML = [['open', 'Open', open.length], ['mine', 'My bids', mine.length]].map(([k, l, n]) => `<button class="${tab === k ? 'on' : ''}" onclick="tab='${k}';render()">${l}<span class="c">${n}</span></button>`).join('');
+  const rows = tab === 'open' ? open : mine;
+  if (!rows.length) {
+    $('grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ic">${tab === 'open' ? '🚗' : '🏷️'}</div><h3>${tab === 'open' ? 'Nothing open right now' : 'No bids yet'}</h3><p>${tab === 'open' ? 'New stock is emailed to you as soon as it’s available.' : 'Cars you bid on appear here.'}</p></div>`;
+    return;
+  }
+  $('grid').innerHTML = rows.map(c => {
+    const t = left(c.closesAt);
+    return `<button class="card" onclick="openCar('${c.id}')">
+      <div class="ph">${pic(c.photos[0])}<span class="mono">${mono(c)}</span>
+        <div class="tl">${statusBadge(c)}${c.status === 'open' && c.reserveMet ? '<span class="badge b">Reserve met</span>' : ''}</div>
+        ${c.photos.length > 1 ? `<span class="pc">${c.photos.length} photos</span>` : ''}</div>
+      <div class="cb">
+        <div><h3>${esc(c.title)}</h3><div class="sub">${esc([c.variant, kmFmt(c.km), [c.location.suburb, c.location.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</div></div>
+        <div class="row2"><div><div class="sub">${c.showHighest ? 'Top bid' : 'Your bid'}</div><div class="big num">${c.showHighest ? money(c.highest) : money(c.myBid)}</div></div>
+          <div style="text-align:right"><div class="sub">${c.bidCount} bid${c.bidCount === 1 ? '' : 's'}</div>${c.myBid != null && c.showHighest ? `<div class="sub">You: ${money(c.myBid)}</div>` : ''}</div></div>
+        <div class="clock ${t.soon ? 'soon' : ''}" data-close="${c.closesAt}">⏱ ${c.status === 'open' ? t.text : 'Closed'}</div>
+      </div></button>`;
+  }).join('');
+}
+
+function tick() {
+  document.querySelectorAll('[data-close]').forEach(el => {
+    const t = left(el.dataset.close);
+    el.textContent = '⏱ ' + t.text;
+    el.classList.toggle('soon', t.soon);
+  });
+}
+
+// ── car sheet ──
+async function openCar(id) {
+  try { current = await api('/api/dealer/cars/' + id); } catch (e) { toast(e.message); return; }
+  gi = 0; drawCar();
+  $('sheet').classList.add('on'); $('scrim').classList.add('on'); document.body.style.overflow = 'hidden';
+  history.replaceState(null, '', '#car=' + id);
+}
+function closeSheet(silent) {
+  $('sheet').classList.remove('on'); $('scrim').classList.remove('on'); document.body.style.overflow = ''; current = null;
+  history.replaceState(null, '', location.pathname);
+  if (!silent && token) load(true);
+}
+
+function gallery(c) {
+  const ps = c.photos;
+  return `<div class="gal" id="gal" onclick="openLb()">${pic(ps[gi])}<span class="mono" style="font-size:64px">${mono(c)}</span>
+    ${ps.length > 1 ? `<button class="nav p" onclick="event.stopPropagation();step(-1)" aria-label="Previous">‹</button><button class="nav n" onclick="event.stopPropagation();step(1)" aria-label="Next">›</button><span class="cnt">${gi + 1} / ${ps.length}</span>` : ''}</div>
+    ${ps.length > 1 ? `<div class="thumbs">${ps.map((p, i) => `<button class="${i === gi ? 'on' : ''}" onclick="gi=${i};drawCar(true)"><img src="${esc(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></button>`).join('')}</div>` : ''}`;
+}
+
+function drawCar(keepScroll) {
+  const c = current, t = left(c.closesAt), open = c.status === 'open';
+  let state = '';
+  if (c.won) state = `<div class="state g">🎉 You won this car at ${money(c.myBid)}. We’ll be in touch with the invoice and transport.</div>`;
+  else if (c.status === 'sold') state = `<div class="state n">This car has been sold.</div>`;
+  else if (!open) state = `<div class="state n">Bidding has closed${c.myBid != null && c.leading ? ' — you had the top bid. We’ll confirm shortly.' : '.'}</div>`;
+  else if (c.myBid != null) state = c.leading ? `<div class="state g">You’re the highest bidder at ${money(c.myBid)}</div>` : `<div class="state o">You’ve been outbid${c.showHighest ? '' : ' — or another dealer bid more'}. Your bid: ${money(c.myBid)}</div>`;
+
+  const scroll = $('sheet').querySelector('.sh-body')?.scrollTop || 0;
+  $('sheet').innerHTML = `
+    <div class="sh-head"><button class="x" onclick="closeSheet()" aria-label="Close">✕</button><span class="t">${esc(c.title)}</span></div>
+    <div class="sh-body">
+      ${gallery(c)}
+      <div class="sh-title"><h2>${esc(c.title)}</h2><p>${esc([c.variant, kmFmt(c.km), [c.location.suburb, c.location.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</p></div>
+
+      <div class="bidbox">
+        ${state}
+        <div class="stats">
+          <div><div class="k">${c.showHighest ? 'Top bid' : 'Bidding'}</div><div class="v num">${c.showHighest ? money(c.highest) : 'Sealed'}</div></div>
+          <div><div class="k">Bids</div><div class="v num">${c.bidCount}</div></div>
+          <div><div class="k">Reserve</div><div class="v" style="font-size:17px;padding-top:4px">${c.reserveMet ? '<span class="badge b">Met</span>' : '<span class="badge n">Not yet met</span>'}</div></div>
+        </div>
+        <div class="clock ${t.soon ? 'soon' : ''}" data-close="${c.closesAt}" style="margin-bottom:12px">⏱ ${open ? t.text : 'Closed'}</div>
+        ${open ? `
+          <div class="amount"><span>$</span><input id="amt" inputmode="numeric" placeholder="${c.minNext.toLocaleString('en-AU')}" value="${c.minNext}" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
+          <div class="quick">${[c.increment, 500, 1000].map(n => `<button onclick="bump(${n})">+${money(n)}</button>`).join('')}</div>
+          <button class="btn" onclick="placeBid()">Place bid</button>
+          <div class="fine">Minimum ${money(c.minNext)}. Bids are binding if accepted. A bid in the last 2 minutes extends bidding by 2 minutes.${c.showHighest ? '' : ' Bidding is sealed — other dealers’ amounts aren’t shown.'}</div>` : ''}
+      </div>
+
+      ${c.description ? `<div class="group-t">About this car</div><div class="para">${esc(c.description)}</div>` : ''}
+      ${c.inspection ? `<div class="group-t">Inspection</div><div class="para">${esc(c.inspection)}</div>` : ''}
+      <div class="group-t">Details</div><div class="group">
+        ${[['Year', c.year], ['Make', c.make], ['Model', c.model], ['Variant', c.variant], ['Odometer', kmFmt(c.km)], ['Condition', c.condition], ['Transmission', c.transmission], ['Fuel', c.fuelType], ['Body', c.bodyType], ['Colour', c.colour], ['Location', [c.location.suburb, c.location.state].filter(Boolean).join(', ')]]
+          .filter(([, v]) => v).map(([k, v]) => `<div class="row"><span>${k}</span><span class="r">${esc(v)}</span></div>`).join('')}
+      </div>
+    </div>`;
+  if (keepScroll) $('sheet').querySelector('.sh-body').scrollTop = scroll;
+}
+
+function bump(n) { const i = $('amt'); i.value = (Number(i.value) || current.minNext - n) + n; }
+async function placeBid() {
+  const amount = Number($('amt').value);
+  if (!amount || amount < current.minNext) { toast(`Minimum bid is ${money(current.minNext)}`); return; }
+  if (!await dialog({ title: `Bid ${money(amount)}?`, text: `On the ${current.title}. Bids are binding if accepted.`, ok: 'Place bid' })) return;
+  try {
+    current = await api(`/api/dealer/cars/${current.id}/bids`, { method: 'POST', body: { amount } });
+    toast(current.leading ? 'Bid placed — you’re leading ✓' : 'Bid placed ✓');
+    drawCar(true); load(true);
+  } catch (e) { toast(e.message); try { current = await api('/api/dealer/cars/' + current.id); drawCar(true); } catch {} }
+}
+
+// photos
+function step(d) { const n = current.photos.length; if (n < 2) return; gi = (gi + d + n) % n; drawCar(true); if ($('lb').classList.contains('on')) drawLb(); }
+function openLb() { if (!current.photos.length) return; drawLb(); $('lb').classList.add('on'); }
+function closeLb() { $('lb').classList.remove('on'); }
+function drawLb() {
+  const ps = current.photos;
+  $('lb').innerHTML = `<button class="x" onclick="closeLb()" aria-label="Close">✕</button><img src="${esc(ps[gi])}" alt="" referrerpolicy="no-referrer">
+    ${ps.length > 1 ? `<button class="nav p" onclick="step(-1)">‹</button><button class="nav n" onclick="step(1)">›</button><span class="cnt" style="left:50%;right:auto;transform:translateX(-50%)">${gi + 1} / ${ps.length}</span>` : ''}`;
+}
+document.addEventListener('keydown', e => {
+  if (!current) return;
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'Escape') $('lb').classList.contains('on') ? closeLb() : closeSheet();
+});
+let tx = null;
+document.addEventListener('touchstart', e => { if (e.target.closest('#gal,#lb')) tx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => { if (tx == null) return; const dx = e.changedTouches[0].clientX - tx; tx = null; if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); });
+
+// ── settings ──
+async function openSettings() {
+  me = await api('/api/dealer/me');
+  current = null;
+  $('sheet').innerHTML = `
+    <div class="sh-head"><button class="x" onclick="closeSheet()" aria-label="Close">✕</button><span class="t">Account</span></div>
+    <div class="sh-body">
+      <div class="sh-title"><h2>${esc(me.businessName)}</h2><p>${esc(me.licence)}${me.abn ? ' · ABN ' + esc(me.abn) : ''}</p></div>
+      <div class="group-t">Contact</div><div class="group">
+        <label class="row"><span>Name</span><input id="s_cn" value="${esc(me.contactName)}"></label>
+        <label class="row"><span>Mobile</span><input id="s_ph" type="tel" value="${esc(me.phone)}"></label>
+        <div class="row"><span>Email</span><span class="r">${esc(me.email)}</span></div>
+      </div>
+      <div class="group-t">New stock alerts</div><div class="group">
+        <label class="row"><span>Email me</span><span class="sw"><input type="checkbox" id="s_ne" ${me.notify?.email !== false ? 'checked' : ''}><span></span></span></label>
+        ${me.smsAvailable ? `<label class="row"><span>Text me</span><span class="sw"><input type="checkbox" id="s_ns" ${me.notify?.sms ? 'checked' : ''}><span></span></span></label>` : ''}
+      </div>
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+        <button class="btn" onclick="saveSettings()">Save</button>
+        <button class="btn sec" onclick="signOut()">Log out</button>
+      </div>
+    </div>`;
+  $('sheet').classList.add('on'); $('scrim').classList.add('on');
+}
+async function saveSettings() {
+  try {
+    me = await api('/api/dealer/me', { method: 'PATCH', body: { contactName: $('s_cn').value, phone: $('s_ph').value, notify: { email: $('s_ne').checked, sms: !!$('s_ns')?.checked } } });
+    toast('Saved ✓'); closeSheet();
+  } catch (e) { toast(e.message); }
+}
+
+// ── boot ──
+const hash = new URLSearchParams(location.hash.slice(1));
+const resetToken = hash.get('reset');
+pendingCar = hash.get('car');
+if (resetToken) authScreen('reset');
+else if (token) start().catch(() => {});
+else authScreen('login', pendingCar ? `<div class="ok">Log in to view this car and bid.</div>` : '');
+</script>
+</body>
+</html>

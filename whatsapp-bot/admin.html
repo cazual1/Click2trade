@@ -37,6 +37,20 @@ input,textarea,select{font:inherit;color:var(--text)}
 .logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:16px;letter-spacing:-.02em}
 .logo i{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0071e3,#34aadc);display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px;font-weight:700}
 .search{margin-left:auto;position:relative;width:min(280px,45vw)}
+.hdr-btn{height:34px;padding:0 14px;border-radius:10px;background:var(--fill);font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:7px;flex-shrink:0}
+.hdr-btn .n{background:var(--red);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-grid;place-items:center;padding:0 5px}
+.sale{background:var(--surface);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow)}
+.sale .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px}
+.sale .top b{font-size:17px;font-weight:600}
+.sale .figs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
+.sale .figs .k{font-size:12px;color:var(--text-2)}.sale .figs .v{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.bidrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:.5px solid var(--line)}
+.bidrow .who{flex:1;min-width:0}.bidrow .who div{font-size:12px;color:var(--text-2)}
+.bidrow .amt{font-weight:600}
+.drow{padding:12px 16px;display:flex;gap:12px;align-items:flex-start;position:relative}
+.drow+.drow::before{content:'';position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}
+.drow .info{flex:1;min-width:0}.drow .info div{font-size:13px;color:var(--text-2)}
+.drow .acts{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .search input{width:100%;height:34px;border-radius:10px;border:0;background:var(--fill);padding:0 12px 0 32px;font-size:14px;outline:none}
 .search input:focus{box-shadow:0 0 0 3px var(--blue-tint)}
 .search svg{position:absolute;left:10px;top:9px;width:15px;height:15px;color:var(--text-2)}
@@ -302,10 +316,20 @@ const EMPTY = {
   rejected: ['—', 'Nothing passed on', 'Cars outside your buying criteria show here.'],
 };
 
+let dealerInfo = { dealers: [], canEmail: false, canSms: false }, salePoll;
 let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null, view = 'grid', gi = 0, contactOnly = false;
 try { view = localStorage.getItem('c2t_view') || 'grid'; contactOnly = localStorage.getItem('c2t_contact') === '1'; } catch {}
 const hasContact = l => !!(l.seller.phone || l.seller.email);
 // Small "Phone" / "Email" / "Marketplace" tags so you can see how each seller can be reached
+const topBidOf = s => (s?.bids || []).reduce((b, x) => !b || x.amount > b.amount ? x : b, null);
+const saleLine = l => {
+  const s = l.sale; if (!s) return '';
+  const top = topBidOf(s), ended = s.status === 'ended' || (s.status === 'open' && new Date(s.closesAt) <= Date.now());
+  if (s.status === 'sold') return `Sold to ${l.deal?.buyingDealer} · ${money(l.deal?.salePrice)}`;
+  if (ended) return `Bidding ended · ${top ? 'top ' + money(top.amount) : 'no bids'}${top && top.amount < s.reserve ? ' (under reserve)' : ''}`;
+  if (s.status === 'open') return `Bidding open · ${s.bids.length} bid${s.bids.length === 1 ? '' : 's'}${top ? ' · top ' + money(top.amount) : ''}`;
+  return '';
+};
 const contactTags = l => `<span class="ct">${l.seller.phone ? '<i>Phone</i>' : ''}${l.seller.email ? '<i>Email</i>' : ''}${!hasContact(l) ? '<i class="m">Marketplace only</i>' : ''}</span>`;
 let token = '';
 try { token = localStorage.getItem('c2t_admin') || ''; } catch {}
@@ -368,9 +392,11 @@ function signOut() { try { localStorage.removeItem('c2t_admin'); } catch {} cons
 // ── data ──
 async function load() {
   if (!meta) meta = await api('/api/meta');
-  leads = await api('/api/leads');
+  [leads, dealerInfo] = await Promise.all([api('/api/leads'), api('/api/admin/dealers').catch(() => dealerInfo)]);
   if (!$('grid')) shell();
   render();
+  const pend = dealerInfo.dealers.filter(d => d.status === 'pending').length;
+  $('dpend').hidden = !pend; $('dpend').textContent = pend;
 }
 
 function shell() {
@@ -380,6 +406,7 @@ function shell() {
     <div class="logo"><i>C</i><b>Click2Trade</b></div>
     <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5" stroke-linecap="round"/></svg>
       <input id="q" placeholder="Search cars, sellers, suburbs" oninput="query=this.value.toLowerCase();render()"></label>
+    <button class="hdr-btn" onclick="openDealers()">Dealers<span class="n" id="dpend" hidden></span></button>
   </div></header>
   <main>
     <section class="hero">
@@ -451,7 +478,7 @@ function setView(v) { view = v; try { localStorage.setItem('c2t_view', v); } cat
 
 function listRow(l) {
   const v = l.vehicle, mkt = l.valuation?.market, d = l.discountPct;
-  const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stageLabel(l.stage);
+  const status = saleLine(l) || (['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stageLabel(l.stage));
   return `<button class="lrow" onclick="openLead('${l.id}')">
     <span class="lthumb" onclick="event.stopPropagation();viewPhotos('${l.id}')" onmouseenter="showPv(event,'${l.id}')" onmousemove="movePv(event)" onmouseleave="hidePv()">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="pc">${photos(l).length}</span>` : ''}</span>
     <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([variantOf(l), kmFmt(v.km)].filter(Boolean).join(' · '))}</div><div style="margin-top:3px">${contactTags(l)}</div></span>
@@ -473,7 +500,7 @@ function dealBadge(l) {
 function card(l) {
   const v = l.vehicle, mkt = l.valuation?.market;
   const pct = mkt && l.askingPrice ? Math.max(4, Math.min(100, l.askingPrice / mkt * 100)) : 0;
-  const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stageLabel(l.stage);
+  const status = saleLine(l) || (['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stageLabel(l.stage));
   const last = (l.thread || []).slice(-1)[0];
   return `<button class="card" onclick="openLead('${l.id}')">
     <div class="ph" onclick="event.stopPropagation();viewPhotos('${l.id}')">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="badge n" style="position:absolute;top:auto;left:auto;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff">${photos(l).length} photos</span>` : ''}
@@ -614,6 +641,8 @@ function draw() {
       ${docs.financeOwing ? `<label class="row"><span class="l">Payout valid until</span><input type="date" data-doc="payoutValidUntil" value="${esc(docs.payoutValidUntil || '')}" onchange="autosave(true)"></label>` : ''}
     </div><div class="group-f">${l.checklist.complete ? '✓ Ready to transact' : `${l.checklist.items.filter(i => !i.done).length} still needed before payment`}</div>
 
+    ${saleSection(l)}
+
     <div class="group-t">Resale</div><div class="group">
       ${inRow('Easy Cars stock #', 'dmsStockNumber', d.dmsStockNumber, 'text', '—')}
       ${inRow('Dealer offers', 'dealerBids', d.dealerBids, 'text', 'Dealer A $41k, Dealer B…')}
@@ -701,6 +730,125 @@ document.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - tx; tx = null;
   if (Math.abs(dx) > 40) { step(dx < 0 ? 1 : -1); e.preventDefault(); }
 });
+
+// ── selling to dealers ──
+const SELL_STAGES = ['agreed', 'agreement_sent', 'inspection', 'documents', 'dms_loaded', 'selling', 'seller_paid', 'in_stock'];
+function saleSection(l) {
+  const s = l.sale, d = l.deal || {};
+  if (!s && !SELL_STAGES.includes(l.stage)) return '';
+  const top = topBidOf(s);
+  const ended = s && (s.status === 'ended' || (s.status === 'open' && new Date(s.closesAt) <= Date.now()));
+  const approved = dealerInfo.dealers.filter(x => x.status === 'approved').length;
+
+  if (s?.status === 'sold') {
+    const margin = d.agreedPrice ? d.salePrice - d.agreedPrice : null;
+    return `<div class="group-t">Sell to dealers</div><div class="sale">
+      <div class="top"><b>✓ Sold to ${esc(d.buyingDealer)}</b><span class="badge g">${money(d.salePrice)}</span></div>
+      <div class="sub">${margin != null ? `Margin <b style="color:${margin >= 0 ? 'var(--green)' : 'var(--red)'}">${money(margin)}</b> · ` : ''}${s.bids.length} bids from ${new Set(s.bids.map(b => b.dealerId)).size} dealers</div></div>`;
+  }
+
+  const bidsList = s?.bids?.length ? s.bids.slice().sort((a, b) => b.amount - a.amount || a.at.localeCompare(b.at)).map((b, i) => `
+    <div class="bidrow"><div class="who"><b>${esc(b.dealerName)}</b>${i === 0 ? ' <span class="badge g">Top</span>' : ''}<div>${ago(b.at)}</div></div>
+      <span class="amt num">${money(b.amount)}</span>
+      <button class="btn sm ${i === 0 ? '' : 'sec'}" onclick="acceptBid('${b.id}','${esc(b.dealerName).replace(/'/g, '')}',${b.amount})">Accept</button></div>`).join('') : '<p class="sub" style="padding:10px 0 2px">No bids yet.</p>';
+
+  if (s?.status === 'open' && !ended) {
+    return `<div class="group-t">Sell to dealers</div><div class="sale">
+      <div class="top"><b>Bidding open</b><span class="sub" data-close="${s.closesAt}">${closesIn(s.closesAt)}</span></div>
+      <div class="figs">
+        <div><div class="k">Top bid</div><div class="v num">${top ? money(top.amount) : '—'}</div></div>
+        <div><div class="k">Reserve</div><div class="v num">${money(s.reserve)}</div></div>
+        <div><div class="k">Bids</div><div class="v num">${s.bids.length}</div></div>
+      </div>
+      <div class="sub">${top && top.amount >= s.reserve ? '<span class="badge g">Reserve met</span> ' : ''}${s.autoAccept ? 'Top bid at or above reserve wins automatically at close.' : 'You’ll choose the winner when bidding closes.'}${s.invited?.emailed || s.invited?.texted ? ` Invited ${s.invited.emailed} by email${s.invited.texted ? `, ${s.invited.texted} by text` : ''}.` : ''}</div>
+      ${bidsList}
+      <div class="actions"><button class="btn sec sm" onclick="endSale()">End without selling</button></div></div>`;
+  }
+
+  const relist = s && ['ended', 'unsold', 'open'].includes(s.status);
+  const desc = [[l.vehicle.year, l.vehicle.make, l.vehicle.model, variantOf(l)].filter(Boolean).join(' '), kmFmt(l.vehicle.km), l.vehicle.condition && l.vehicle.condition !== 'Unknown' ? 'Condition: ' + l.vehicle.condition : '', d.inspectionResult ? 'Inspection: ' + d.inspectionResult : ''].filter(Boolean).join('\n');
+  return `<div class="group-t">Sell to dealers</div>
+    ${relist ? `<div class="sale" style="margin-bottom:12px"><div class="top"><b>Bidding ended</b><span class="sub">${top ? 'Top ' + money(top.amount) + (top.amount < s.reserve ? ' · under reserve' : '') : 'No bids'}</span></div>${bidsList}</div>` : ''}
+    <div class="group">
+      <label class="row"><span class="l">Reserve (lowest you’ll take)</span><input id="sv_res" type="number" inputmode="numeric" placeholder="$0" value="${s?.reserve || ''}"></label>
+      <label class="row"><span class="l">Starting bid <span class="sub">(optional)</span></span><input id="sv_start" type="number" inputmode="numeric" placeholder="$0"></label>
+      <label class="row"><span class="l">Bidding open for</span><select id="sv_hrs" style="max-width:140px">${[[2, '2 hours'], [6, '6 hours'], [12, '12 hours'], [24, '24 hours'], [48, '2 days'], [72, '3 days']].map(([h, t]) => `<option value="${h}" ${h === 24 ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      <label class="row"><span class="l">Show top bid to dealers</span><span class="sw"><input type="checkbox" id="sv_show" checked><span></span></span></label>
+      <label class="row"><span class="l">Auto-accept top bid at or above reserve</span><span class="sw"><input type="checkbox" id="sv_auto" checked><span></span></span></label>
+      <label class="row"><span class="l">Email dealers</span><span class="sw"><input type="checkbox" id="sv_em" ${dealerInfo.canEmail ? 'checked' : 'disabled'}><span></span></span></label>
+      ${dealerInfo.canSms ? `<label class="row"><span class="l">Text dealers who opted in</span><span class="sw"><input type="checkbox" id="sv_sms"><span></span></span></label>` : ''}
+    </div>
+    <div class="field-l"><span>What dealers see about this car</span></div>
+    <textarea class="txt" id="sv_desc" placeholder="Condition, service history, extras, damage…">${esc(s?.description || desc)}</textarea>
+    <div class="group-f">Dealers never see the seller’s details, your purchase price, or the original listing.${dealerInfo.canEmail ? '' : ' Email isn’t set up yet (RESEND_API_KEY), so dealers will only see it when they log in.'}</div>
+    <div class="actions"><button class="btn wide" onclick="openSale()" ${approved ? '' : 'disabled'}>${relist ? 'Relist for bids' : 'Open bidding'} · ${approved} approved dealer${approved === 1 ? '' : 's'}</button></div>
+    ${approved ? '' : '<div class="group-f">Approve at least one dealer first (Dealers button, top right). Dealers sign up at <b>/dealer</b>.</div>'}`;
+}
+function closesIn(iso) {
+  const ms = new Date(iso) - Date.now(); if (ms <= 0) return 'Closed';
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60), dd = Math.floor(h / 24);
+  return 'Closes in ' + (dd ? `${dd}d ${h % 24}h` : h ? `${h}h ${m % 60}m` : `${m}m ${Math.floor(ms / 1000) % 60}s`);
+}
+setInterval(() => document.querySelectorAll('[data-close]').forEach(el => el.textContent = closesIn(el.dataset.close)), 1000);
+
+async function openSale() {
+  const reserve = Number($('sv_res').value);
+  if (!reserve) { toast('Set a reserve — the lowest price you’ll sell for'); return; }
+  if (!await dialog({ title: 'Open bidding?', text: `Approved dealers ${$('sv_em')?.checked ? 'will be emailed and ' : ''}can bid for ${$('sv_hrs').selectedOptions[0].text}. Reserve ${money(reserve)}.`, ok: 'Open bidding' })) return;
+  await saveNow();
+  const r = await api(`/api/leads/${current.id}/sale`, { method: 'POST', body: {
+    reserve, startPrice: Number($('sv_start').value) || 0, hours: Number($('sv_hrs').value), description: $('sv_desc').value,
+    showHighest: $('sv_show').checked, autoAccept: $('sv_auto').checked, notifyEmail: !!$('sv_em')?.checked, notifySms: !!$('sv_sms')?.checked, moveStage: true,
+  } });
+  current = r.lead;
+  toast(`Bidding open ✓ ${r.invited.emailed ? `· ${r.invited.emailed} emailed` : ''}`);
+  draw(); load();
+}
+async function acceptBid(bidId, name, amount) {
+  if (!await dialog({ title: `Sell to ${name}?`, text: `For ${money(amount)}. Bidding closes and the other dealers are told.`, ok: 'Accept bid' })) return;
+  current = await api(`/api/leads/${current.id}/sale/accept`, { method: 'POST', body: { bidId } });
+  toast('Sold ✓'); draw(); load();
+}
+async function endSale() {
+  if (!await dialog({ title: 'End bidding without selling?', text: 'You can relist it afterwards.', ok: 'End bidding', danger: true })) return;
+  current = await api(`/api/leads/${current.id}/sale/close`, { method: 'POST' });
+  draw(); load();
+}
+// Keep an open sale's bids live while its sheet is open
+setInterval(async () => {
+  if (!current || current.sale?.status !== 'open' || !$('sheet').classList.contains('on') || document.activeElement?.closest('#sheet input,#sheet textarea')) return;
+  try {
+    const fresh = await api('/api/leads/' + current.id);
+    if (JSON.stringify(fresh.sale) !== JSON.stringify(current.sale)) { current = fresh; draw(); }
+  } catch {}
+}, 15000);
+
+// ── dealer accounts ──
+async function openDealers() {
+  dealerInfo = await api('/api/admin/dealers');
+  current = null;
+  const groups = [['pending', 'Waiting for approval'], ['approved', 'Approved'], ['suspended', 'Suspended']];
+  const portal = location.origin + '/dealer';
+  $('sheet').innerHTML = `<div class="sh-head"><button class="x" onclick="closeLead()" aria-label="Close">✕</button><span class="t">Dealers</span></div>
+    <div class="sh-body"><div class="sh-title"><h2>Dealers</h2><p>Dealers sign up at <a href="${portal}" target="_blank" rel="noopener">${esc(portal)}</a>. Check their licence before approving.</p></div>
+    <div class="actions" style="margin-top:8px"><button class="btn sec sm" onclick="navigator.clipboard?.writeText('${portal}');toast('Link copied')">Copy sign-up link</button></div>
+    ${dealerInfo.dealers.length ? groups.map(([k, t]) => {
+      const ds = dealerInfo.dealers.filter(d => d.status === k); if (!ds.length) return '';
+      return `<div class="group-t">${t} · ${ds.length}</div><div class="group">${ds.map(d => `
+        <div class="drow"><div class="info"><b>${esc(d.businessName)}</b>
+          <div>${esc(d.licence)}${d.abn ? ' · ABN ' + esc(d.abn) : ''} · ${esc([d.suburb, d.state].filter(Boolean).join(', '))}</div>
+          <div>${esc(d.contactName)} · <a href="mailto:${esc(d.email)}">${esc(d.email)}</a> · <a href="tel:${esc(d.phone)}">${esc(d.phone)}</a></div>
+          <div>${d.bidCount} bids · ${d.won} won · joined ${ago(d.createdAt)}</div></div>
+          <div class="acts">${k !== 'approved' ? `<button class="btn sm" onclick="setDealer('${d.id}','approved')">Approve</button>` : ''}${k !== 'suspended' ? `<button class="btn sm ${k === 'pending' ? 'danger' : 'sec'}" onclick="setDealer('${d.id}','suspended')">${k === 'pending' ? 'Decline' : 'Suspend'}</button>` : ''}</div></div>`).join('')}</div>`;
+    }).join('') : `<div class="empty"><div class="ic">🏢</div><h3>No dealers yet</h3><p>Share the sign-up link with dealers you want to sell to.</p></div>`}
+    ${dealerInfo.canEmail ? '' : '<div class="group-f" style="margin-top:16px">Email isn’t set up yet (RESEND_API_KEY), so dealers won’t get approval or new-stock emails. Let them know when they’re approved.</div>'}
+    </div>`;
+  $('sheet').classList.add('on'); $('scrim').classList.add('on'); document.body.style.overflow = 'hidden';
+}
+async function setDealer(id, status) {
+  await api('/api/admin/dealers/' + id, { method: 'PATCH', body: { status } });
+  toast(status === 'approved' ? 'Approved ✓' : 'Updated'); openDealers(); load();
+}
 
 function smsLen() { const s = $('sms'), o = $('smslen'); if (s && o) o.textContent = `${s.value.length} · ${Math.ceil(s.value.length / 153) || 1} SMS`; }
 function pickCh(b) { b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }

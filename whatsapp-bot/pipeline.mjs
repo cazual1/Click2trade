@@ -88,7 +88,8 @@ export function checkStageMove(lead, to) {
   if (order(to) > order('documents') && order(to) <= order('delivered') && !documentChecklist(lead).complete) {
     return 'Document checklist incomplete';
   }
-  if (order(to) >= order('seller_paid') && order(to) <= order('delivered') && !lead.deal?.buyingDealer) {
+  // You take possession first, so paying the seller doesn't need a buyer yet; invoicing does
+  if (order(to) >= order('invoiced') && order(to) <= order('delivered') && !lead.deal?.buyingDealer) {
     return 'Record the buying dealer first';
   }
   return null;
