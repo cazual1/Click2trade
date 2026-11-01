@@ -2,9 +2,9 @@
 // The 16-step buy → on-sell flow. Each lead sits at exactly one stage.
 
 export const STAGES = [
-  { key: 'new',               step: 1,  label: 'Ingested' },
-  { key: 'needs_valuation',   step: 2,  label: 'Needs valuation' },
-  { key: 'draft',             step: 3,  label: 'Awaiting approval' },
+  { key: 'new',               step: 1,  label: 'Found on marketplace' },
+  { key: 'needs_valuation',   step: 2,  label: 'Needs a price' },
+  { key: 'draft',             step: 3,  label: 'Intro ready to approve' },
   { key: 'contacted',         step: 3,  label: 'Intro sent' },
   { key: 'negotiating',       step: 4,  label: 'Negotiating' },
   { key: 'agreed',            step: 5,  label: 'Price agreed' },
@@ -17,7 +17,7 @@ export const STAGES = [
   { key: 'in_stock',          step: 12, label: 'In dealership stock' },
   { key: 'invoiced',          step: 13, label: 'Invoiced to buying dealer' },
   { key: 'transport',         step: 14, label: 'Transport arranged' },
-  { key: 'payment_received',  step: 15, label: 'Dealer payment received' },
+  { key: 'payment_received',  step: 15, label: 'Dealer paid (within 72h)' },
   { key: 'delivered',         step: 16, label: 'Disposed to buying dealer' },
   // Off-ramps
   { key: 'rejected',          step: 0,  label: 'Rejected' },

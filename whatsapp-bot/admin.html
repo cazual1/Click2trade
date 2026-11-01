@@ -24,6 +24,7 @@
   --glass:rgba(22,22,24,.72);--shadow:none;--shadow-lg:0 12px 48px rgba(0,0,0,.6);
 }}
 *{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text);font:15px/1.47 var(--font);letter-spacing:-.01em;-webkit-font-smoothing:antialiased;min-height:100vh}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -143,6 +144,31 @@ button.stat:hover{transform:translateY(-2px)}
 .viewsw button{width:34px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--text-2)}
 .viewsw button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .tools-r{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 14px;margin-bottom:4px;scrollbar-width:thin}
+.strip button{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:108px;padding:9px 12px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);text-align:left;transition:background .15s,color .15s}
+.strip button .sn{font-size:11px;color:var(--text-3);font-weight:600}
+.strip button .sl{font-size:13px;font-weight:500;line-height:1.25}
+.strip button .sc{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.strip button.zero{opacity:.55}
+.strip button.on{background:var(--blue);color:#fff}.strip button.on .sn{color:rgba(255,255,255,.75)}
+.board{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;min-height:60vh}
+.col{flex:0 0 268px;background:var(--fill-2);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px;transition:background .15s}
+.col.over{background:var(--blue-tint);outline:2px dashed var(--blue);outline-offset:-2px}
+.col h4{font-size:13px;font-weight:600;padding:4px 6px 2px;display:flex;justify-content:space-between;gap:8px}
+.col h4 .n{color:var(--text-2);font-weight:500}
+.col h4 small{display:block;font-size:11px;color:var(--text-3);font-weight:600}
+.bcard{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);padding:8px;display:flex;gap:10px;text-align:left;width:100%;cursor:grab;transition:transform .15s,box-shadow .15s}
+.bcard:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.bcard.drag{opacity:.4}
+.bcard .bt{position:relative;width:64px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center}
+.bcard .bt img{position:relative;width:100%;height:100%;object-fit:cover}
+.bcard .bt .mono{font-size:16px;font-weight:700;color:var(--text-3)}
+.bcard .bt img~.mono{display:none}
+.bcard b{font-size:13px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bcard .sub{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bcard .nx{font-size:11px;color:var(--blue);font-weight:500}
+.col .empty-c{font-size:12px;color:var(--text-3);text-align:center;padding:14px 6px}
+.stuck{color:var(--red);font-weight:600}
 .fchip{height:32px;padding:0 13px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;color:var(--text);transition:background .2s,color .2s}
 .fchip.on{background:var(--blue);color:#fff}
 .fchip .c{opacity:.65;font-weight:400}
@@ -292,7 +318,9 @@ details summary::-webkit-details-marker{display:none}
 <div id="pv"></div>
 
 <script>
+const ACTIVE = ['new','needs_valuation','draft','contacted','negotiating','agreed','agreement_sent','inspection','documents','dms_loaded','selling','seller_paid','in_stock','invoiced','transport','payment_received','delivered'];
 const TABS = [
+  { key: 'pipeline', label: 'Pipeline', stages: ACTIVE.filter(k => k !== 'new') },
   { key: 'approve', label: 'To approve', stages: ['draft'] },
   { key: 'talking', label: 'Conversations', stages: ['contacted', 'negotiating'] },
   { key: 'deals', label: 'Deals', stages: ['agreed','agreement_sent','inspection','documents','dms_loaded','selling','seller_paid','in_stock','invoiced','transport','payment_received'] },
@@ -317,10 +345,23 @@ const EMPTY = {
 };
 
 let dealerInfo = { dealers: [], canEmail: false, canSms: false }, salePoll;
+let stepFilter = null;
 let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null, view = 'grid', gi = 0, contactOnly = false;
 try { view = localStorage.getItem('c2t_view') || 'grid'; contactOnly = localStorage.getItem('c2t_contact') === '1'; } catch {}
 const hasContact = l => !!(l.seller.phone || l.seller.email);
 // Small "Phone" / "Email" / "Marketplace" tags so you can see how each seller can be reached
+// How long a car has sat at its current step, and when that's too long
+const STUCK_DAYS = { draft: 2, contacted: 3, negotiating: 4, agreed: 2, agreement_sent: 2, inspection: 3, documents: 3, dms_loaded: 2, selling: 3, seller_paid: 2, in_stock: 3, invoiced: 3, transport: 3, payment_received: 2, needs_valuation: 3 };
+const daysAt = l => {
+  const since = [...(l.history || [])].reverse().find(h => h.to === l.stage)?.at || l.firstSeenAt || l.updatedAt;
+  return since ? Math.floor((Date.now() - new Date(since)) / 86400000) : 0;
+};
+const isStuck = l => STUCK_DAYS[l.stage] != null && daysAt(l) >= STUCK_DAYS[l.stage];
+const stepText = l => {
+  const st = stageStep(l.stage), d = daysAt(l);
+  const base = st ? `Step ${st} · ${stageLabel(l.stage)}` : stageLabel(l.stage);
+  return d ? `${base} · ${d}d` : base;
+};
 const topBidOf = s => (s?.bids || []).reduce((b, x) => !b || x.amount > b.amount ? x : b, null);
 const saleLine = l => {
   const s = l.sale; if (!s) return '';
@@ -417,7 +458,8 @@ function shell() {
     <div class="toolbar"><div class="seg" id="seg" role="tablist"></div>
       <div class="tools-r"><button class="fchip" id="fc" onclick="toggleContact()" aria-pressed="false">With phone or email<span class="c" id="fcn"></span></button><label class="sort">Sort by <select id="sort" onchange="sort=this.value;render()">
         <option value="deal">Best deal</option><option value="new">Newest</option><option value="price">Lowest price</option><option value="km">Lowest km</option></select></label>
-        <div class="viewsw" role="group" aria-label="View"><button id="vg" onclick="setView('grid')" aria-label="Grid view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="6" height="6" rx="1.5"/><rect x="8" width="6" height="6" rx="1.5"/><rect y="8" width="6" height="6" rx="1.5"/><rect x="8" y="8" width="6" height="6" rx="1.5"/></svg></button><button id="vl" onclick="setView('list')" aria-label="List view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="14" height="2.4" rx="1.2"/><rect y="5.8" width="14" height="2.4" rx="1.2"/><rect y="11.6" width="14" height="2.4" rx="1.2"/></svg></button></div></div></div>
+        <div class="viewsw" role="group" aria-label="View"><button id="vg" onclick="setView('grid')" aria-label="Grid view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="6" height="6" rx="1.5"/><rect x="8" width="6" height="6" rx="1.5"/><rect y="8" width="6" height="6" rx="1.5"/><rect x="8" y="8" width="6" height="6" rx="1.5"/></svg></button><button id="vl" onclick="setView('list')" aria-label="List view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="14" height="2.4" rx="1.2"/><rect y="5.8" width="14" height="2.4" rx="1.2"/><rect y="11.6" width="14" height="2.4" rx="1.2"/></svg></button><button id="vb" onclick="setView('board')" aria-label="Board view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="3.6" height="14" rx="1.2"/><rect x="5.2" width="3.6" height="9" rx="1.2"/><rect x="10.4" width="3.6" height="11.5" rx="1.2"/></svg></button></div></div></div>
+    <div class="strip" id="strip" hidden></div>
     <section class="grid" id="grid"></section>
   </main>`;
 }
@@ -430,7 +472,7 @@ function render() {
   const unread = leads.filter(l => l.unread).length;
   $('sum').textContent = toApprove ? `${toApprove} car${toApprove > 1 ? 's' : ''} ready for your approval${unread ? ` · ${unread} new repl${unread > 1 ? 'ies' : 'y'}` : ''}.` : unread ? `${unread} new repl${unread > 1 ? 'ies' : 'y'} from sellers.` : 'You’re all caught up.';
 
-  const deals = leads.filter(l => TABS[2].stages.includes(l.stage));
+  const deals = leads.filter(l => TABS.find(t => t.key === 'deals').stages.includes(l.stage));
   const margin = deals.reduce((s, l) => s + ((l.deal?.salePrice || l.valuation?.market || 0) - (l.deal?.agreedPrice || 0)), 0);
   const upside = leads.filter(l => l.stage === 'draft').reduce((s, l) => s + Math.max(0, (l.valuation?.market || 0) - (l.askingPrice || 0)), 0);
   $('stats').innerHTML = [
@@ -444,6 +486,15 @@ function render() {
 
   const t = TABS.find(t => t.key === tab);
   let rows = leads.filter(l => t.stages.includes(l.stage));
+  // Step-by-step strip on the Pipeline and Deals tabs: tap a step to see only those cars
+  const showStrip = ['pipeline', 'deals'].includes(tab) && view !== 'board';
+  $('strip').hidden = !showStrip;
+  if (showStrip) {
+    const cnt = k => rows.filter(l => l.stage === k).length;
+    $('strip').innerHTML = `<button class="${stepFilter ? '' : 'on'}" onclick="stepFilter=null;render()"><span class="sn">ALL STEPS</span><span class="sl">Everything</span><span class="sc num">${rows.length}</span></button>`
+      + t.stages.map(k => `<button class="${stepFilter === k ? 'on' : ''} ${cnt(k) ? '' : 'zero'}" onclick="stepFilter='${k}';render()"><span class="sn">STEP ${stageStep(k)}</span><span class="sl">${esc(stageLabel(k))}</span><span class="sc num">${cnt(k)}</span></button>`).join('');
+    if (stepFilter && t.stages.includes(stepFilter)) rows = rows.filter(l => l.stage === stepFilter);
+  }
   $('fcn').textContent = rows.filter(hasContact).length;
   $('fc').classList.toggle('on', contactOnly); $('fc').setAttribute('aria-pressed', contactOnly);
   if (contactOnly) rows = rows.filter(hasContact);
@@ -456,13 +507,15 @@ function render() {
   };
   rows.sort((a, b) => (b.unread ? 1 : 0) - (a.unread ? 1 : 0) || sorters[sort](a, b));
 
+  $('vg').classList.toggle('on', view === 'grid'); $('vl').classList.toggle('on', view === 'list'); $('vb').classList.toggle('on', view === 'board');
+  if (view === 'board') { renderBoard(t.stages, rows); return; }
+
   if (!rows.length) {
     const [ic, h3, p] = query ? ['🔍', 'No results', `Nothing matches “${query}”.`]
       : contactOnly ? ['📵', 'No sellers with contact info here', 'Turn off “With phone or email” to see every car.'] : EMPTY[tab];
     $('grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ic">${ic}</div><h3>${esc(h3)}</h3><p>${esc(p)}</p></div>`;
     return;
   }
-  $('vg').classList.toggle('on', view === 'grid'); $('vl').classList.toggle('on', view === 'list');
   if (view === 'list') {
     $('grid').className = 'list';
     $('grid').innerHTML = `<div class="lrow lhead"><span></span><span>Vehicle</span><span>Asking</span><span>Market</span><span>Below</span><span>Location</span><span>Status</span></div>` + rows.map(listRow).join('');
@@ -474,11 +527,50 @@ function render() {
 
 function toggleContact() { contactOnly = !contactOnly; try { localStorage.setItem('c2t_contact', contactOnly ? '1' : '0'); } catch {} render(); }
 
+// What happens next at each step, in plain words (board cards)
+const NEXT_HINT = {
+  needs_valuation: 'Set a market value', draft: 'Approve & send the intro', contacted: 'Waiting for the seller to reply',
+  negotiating: 'Agree a price', agreed: 'Send the purchase agreement', agreement_sent: 'Get it signed, book inspection',
+  inspection: 'Inspect, then collect documents', documents: 'Finish the document checklist', dms_loaded: 'Offer to dealers',
+  selling: 'Pay the seller', seller_paid: 'Bring into stock', in_stock: 'Invoice the buying dealer',
+  invoiced: 'Arrange transport', transport: 'Dealer pays within 72h', payment_received: 'Dispose to the buying dealer',
+};
+// ── board: one column per step; drag a car to move it ──
+function renderBoard(stages, rows) {
+  $('grid').className = 'board';
+  $('grid').innerHTML = stages.map(k => {
+    const cs = rows.filter(l => l.stage === k);
+    return `<div class="col" data-stage="${k}" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropOn(event,'${k}')">
+      <h4><span><small>STEP ${stageStep(k) || '—'}</small>${esc(stageLabel(k))}</span><span class="n">${cs.length}</span></h4>
+      ${cs.map(boardCard).join('') || '<div class="empty-c">Nothing here</div>'}</div>`;
+  }).join('');
+}
+function boardCard(l) {
+  const d = daysAt(l), next = NEXT_HINT[l.stage];
+  return `<button class="bcard" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${l.id}');this.classList.add('drag')" ondragend="this.classList.remove('drag')" onclick="openLead('${l.id}')">
+    <span class="bt">${photo(l) ? `<img loading="lazy" src="${esc(photo(l))}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<span class="mono">${mono(l)}</span></span>
+    <span style="min-width:0;flex:1"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b>
+      <span class="sub" style="display:block">${money(l.deal?.salePrice || l.deal?.agreedPrice || l.askingPrice)} · ${kmFmt(l.vehicle.km)}</span>
+      <span class="sub ${isStuck(l) ? 'stuck' : ''}" style="display:block">${l.alerts.length ? '⚠︎ ' + esc(l.alerts[0]) : saleLine(l) ? esc(saleLine(l)) : d ? `${d} day${d === 1 ? '' : 's'} at this step` : 'Today'}</span>
+      ${next && l.stage !== 'delivered' ? `<span class="nx">Next: ${esc(next)}</span>` : ''}</span></button>`;
+}
+async function dropOn(e, stage) {
+  e.preventDefault(); e.currentTarget.classList.remove('over');
+  const id = e.dataTransfer.getData('text/plain'), l = leads.find(x => x.id === id);
+  if (!l || l.stage === stage) return;
+  if (stage === 'contacted' && l.stage === 'draft') { toast('Open the car and approve the intro to send it'); return; }
+  try {
+    await api('/api/leads/' + id + '/stage', { method: 'POST', body: { stage } });
+    toast(`${carName(l)} → ${stageLabel(stage)} ✓`);
+    load();
+  } catch {}
+}
+
 function setView(v) { view = v; try { localStorage.setItem('c2t_view', v); } catch {} render(); }
 
 function listRow(l) {
   const v = l.vehicle, mkt = l.valuation?.market, d = l.discountPct;
-  const status = saleLine(l) || (['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stageLabel(l.stage));
+  const status = saleLine(l) || (['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stepText(l));
   return `<button class="lrow" onclick="openLead('${l.id}')">
     <span class="lthumb" onclick="event.stopPropagation();viewPhotos('${l.id}')" onmouseenter="showPv(event,'${l.id}')" onmousemove="movePv(event)" onmouseleave="hidePv()">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="pc">${photos(l).length}</span>` : ''}</span>
     <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([variantOf(l), kmFmt(v.km)].filter(Boolean).join(' · '))}</div><div style="margin-top:3px">${contactTags(l)}</div></span>
@@ -486,7 +578,7 @@ function listRow(l) {
     <span class="num c-mkt">${money(mkt)}<div class="sub" style="font-weight:400">${l.valuation?.method === 'ai' ? 'AI estimate' : l.valuation ? 'Market' : ''}</div></span>
     <span class="c-pct">${d == null ? '<span class="sub">—</span>' : `<span class="badge ${d >= meta.criteria.minDiscountPct ? 'g' : d > 0 ? 'o' : 'n'}">${d}%</span>`}</span>
     <span class="sub c-loc">${esc([l.location.suburb, l.location.state].filter(Boolean).join(', '))}</span>
-    <span class="st c-st">${l.alerts.length ? `<span style="color:var(--red)">⚠︎ ${esc(l.alerts[0])}</span>` : esc(status)}</span>
+    <span class="st c-st ${isStuck(l) ? 'stuck' : ''}">${l.alerts.length ? `<span style="color:var(--red)">⚠︎ ${esc(l.alerts[0])}</span>` : esc(status)}</span>
   </button>`;
 }
 
@@ -500,7 +592,7 @@ function dealBadge(l) {
 function card(l) {
   const v = l.vehicle, mkt = l.valuation?.market;
   const pct = mkt && l.askingPrice ? Math.max(4, Math.min(100, l.askingPrice / mkt * 100)) : 0;
-  const status = saleLine(l) || (['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stageLabel(l.stage));
+  const status = saleLine(l) || (['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stepText(l));
   const last = (l.thread || []).slice(-1)[0];
   return `<button class="card" onclick="openLead('${l.id}')">
     <div class="ph" onclick="event.stopPropagation();viewPhotos('${l.id}')">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="badge n" style="position:absolute;top:auto;left:auto;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff">${photos(l).length} photos</span>` : ''}
@@ -518,7 +610,7 @@ function card(l) {
     </div></button>`;
 }
 
-function setTab(k) { tab = k; render(); window.scrollTo({ top: $('seg').offsetTop - 80, behavior: 'smooth' }); }
+function setTab(k) { tab = k; stepFilter = null; render(); window.scrollTo({ top: $('seg').offsetTop - 80, behavior: 'smooth' }); }
 
 // ── detail sheet ──
 async function openLead(id) {
