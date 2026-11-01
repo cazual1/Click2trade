@@ -7,7 +7,8 @@ import OpenAI from 'openai';
 import twilio from 'twilio';
 import { createClient } from '@supabase/supabase-js';
 import { sendDealerOutreach, createInboundHandler } from './dealer-outreach.mjs';
-import { createAcquisitionRouter, handleSellerEmail } from './acquisition.mjs';
+import { createAcquisitionRouter, handleSellerEmail, view } from './acquisition.mjs';
+import { createDealerRouter } from './dealers.mjs';
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -459,6 +460,9 @@ app.post('/inbound-email', async (req, res) => {
 
 // ── ACQUISITION: listing feed, approval queue, deal pipeline ──
 app.use(createAcquisitionRouter());
+
+// ── DEALER PORTAL: dealer accounts, stock open for bids, bidding ──
+app.use(createDealerRouter({ adminView: view }));
 
 // ── HEALTH CHECK ──
 app.get('/', (req, res) => {

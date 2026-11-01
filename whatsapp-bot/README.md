@@ -39,6 +39,17 @@ Webhooks to configure:
 Storage: Supabase `leads` / `suppressions` tables (schema at the top of `store.mjs`) if `SUPABASE_URL` is set, otherwise `data/leads.json`.
 On Railway/Render the local disk is wiped on redeploy, so use Supabase or a persistent volume in production.
 
+### Dealer portal
+
+Dealers sign up at `/dealer` (business name, dealer licence, ABN, contact details). Accounts start **pending**: approve them from the **Dealers** button in `/admin` after checking their licence.
+
+On any car you've secured (price agreed onwards), **Sell to dealers** opens bidding: set a reserve, how long it runs, and what dealers see about the car. Approved dealers are emailed (and texted, if they opted in) a link to it.
+- Dealers never see the seller, your purchase price, valuation or the original listing.
+- Open bidding (top bid shown, $100 increments) or sealed. A bid in the last 2 minutes extends bidding by 2 minutes.
+- At close, the top bid at or above reserve wins automatically (if auto-accept is on); otherwise you choose. The deal's buying dealer and sale price fill in, and bidders are told.
+
+Supabase users: also create the `dealers` table (schema at the top of `store.mjs`).
+
 Compliance: intro messages identify the business and dealer licence and carry an opt-out. STOP/unsubscribe replies are suppressed permanently (Spam Act 2003).
 
 ## Architecture

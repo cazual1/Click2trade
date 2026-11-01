@@ -24,6 +24,7 @@
   --glass:rgba(22,22,24,.72);--shadow:none;--shadow-lg:0 12px 48px rgba(0,0,0,.6);
 }}
 *{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text);font:15px/1.47 var(--font);letter-spacing:-.01em;-webkit-font-smoothing:antialiased;min-height:100vh}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -37,6 +38,20 @@ input,textarea,select{font:inherit;color:var(--text)}
 .logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:16px;letter-spacing:-.02em}
 .logo i{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0071e3,#34aadc);display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px;font-weight:700}
 .search{margin-left:auto;position:relative;width:min(280px,45vw)}
+.hdr-btn{height:34px;padding:0 14px;border-radius:10px;background:var(--fill);font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:7px;flex-shrink:0}
+.hdr-btn .n{background:var(--red);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-grid;place-items:center;padding:0 5px}
+.sale{background:var(--surface);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow)}
+.sale .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px}
+.sale .top b{font-size:17px;font-weight:600}
+.sale .figs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
+.sale .figs .k{font-size:12px;color:var(--text-2)}.sale .figs .v{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.bidrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:.5px solid var(--line)}
+.bidrow .who{flex:1;min-width:0}.bidrow .who div{font-size:12px;color:var(--text-2)}
+.bidrow .amt{font-weight:600}
+.drow{padding:12px 16px;display:flex;gap:12px;align-items:flex-start;position:relative}
+.drow+.drow::before{content:'';position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}
+.drow .info{flex:1;min-width:0}.drow .info div{font-size:13px;color:var(--text-2)}
+.drow .acts{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .search input{width:100%;height:34px;border-radius:10px;border:0;background:var(--fill);padding:0 12px 0 32px;font-size:14px;outline:none}
 .search input:focus{box-shadow:0 0 0 3px var(--blue-tint)}
 .search svg{position:absolute;left:10px;top:9px;width:15px;height:15px;color:var(--text-2)}
@@ -129,6 +144,31 @@ button.stat:hover{transform:translateY(-2px)}
 .viewsw button{width:34px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--text-2)}
 .viewsw button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .tools-r{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 14px;margin-bottom:4px;scrollbar-width:thin}
+.strip button{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:108px;padding:9px 12px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);text-align:left;transition:background .15s,color .15s}
+.strip button .sn{font-size:11px;color:var(--text-3);font-weight:600}
+.strip button .sl{font-size:13px;font-weight:500;line-height:1.25}
+.strip button .sc{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.strip button.zero{opacity:.55}
+.strip button.on{background:var(--blue);color:#fff}.strip button.on .sn{color:rgba(255,255,255,.75)}
+.board{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;min-height:60vh}
+.col{flex:0 0 268px;background:var(--fill-2);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px;transition:background .15s}
+.col.over{background:var(--blue-tint);outline:2px dashed var(--blue);outline-offset:-2px}
+.col h4{font-size:13px;font-weight:600;padding:4px 6px 2px;display:flex;justify-content:space-between;gap:8px}
+.col h4 .n{color:var(--text-2);font-weight:500}
+.col h4 small{display:block;font-size:11px;color:var(--text-3);font-weight:600}
+.bcard{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);padding:8px;display:flex;gap:10px;text-align:left;width:100%;cursor:grab;transition:transform .15s,box-shadow .15s}
+.bcard:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.bcard.drag{opacity:.4}
+.bcard .bt{position:relative;width:64px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center}
+.bcard .bt img{position:relative;width:100%;height:100%;object-fit:cover}
+.bcard .bt .mono{font-size:16px;font-weight:700;color:var(--text-3)}
+.bcard .bt img~.mono{display:none}
+.bcard b{font-size:13px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bcard .sub{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bcard .nx{font-size:11px;color:var(--blue);font-weight:500}
+.col .empty-c{font-size:12px;color:var(--text-3);text-align:center;padding:14px 6px}
+.stuck{color:var(--red);font-weight:600}
 .fchip{height:32px;padding:0 13px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;color:var(--text);transition:background .2s,color .2s}
 .fchip.on{background:var(--blue);color:#fff}
 .fchip .c{opacity:.65;font-weight:400}
@@ -136,16 +176,22 @@ button.stat:hover{transform:translateY(-2px)}
 .ct i{font-style:normal;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--green-tint);color:var(--green)}
 .ct i.m{background:var(--fill);color:var(--text-2)}
 .list{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-.lrow{display:grid;grid-template-columns:96px minmax(180px,2.2fr) 1fr 1.1fr .9fr 1.2fr 1.4fr;align-items:center;gap:16px;padding:10px 16px;width:100%;text-align:left;position:relative;transition:background .15s}
+.lrow{display:grid;grid-template-columns:176px minmax(180px,2.2fr) 1fr 1.1fr .9fr 1.2fr 1.4fr;align-items:center;gap:16px;padding:10px 16px;width:100%;text-align:left;position:relative;transition:background .15s}
 .lrow:hover{background:var(--fill-2)}
-.lrow+.lrow::before{content:'';position:absolute;top:0;left:128px;right:0;border-top:.5px solid var(--line)}
+.lrow+.lrow::before{content:'';position:absolute;top:0;left:208px;right:0;border-top:.5px solid var(--line)}
 .lhead{font-size:12px;color:var(--text-2);font-weight:500;padding-top:12px;padding-bottom:8px;cursor:default}
 .lhead:hover{background:none}
-.lthumb{position:relative;width:96px;height:72px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center}
+.lthumb{position:relative;width:176px;height:132px;border-radius:12px;overflow:hidden;cursor:zoom-in;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center}
 .lthumb img{position:relative;width:100%;height:100%;object-fit:contain}
 .lthumb .mono{font-size:22px;font-weight:700;color:var(--text-3)}
 .lthumb img~.mono{display:none}
 .lthumb .blur{inset:-12px;filter:blur(12px) saturate(1.3)}
+.lthumb .pc{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px}
+.ph{cursor:zoom-in}
+#pv{position:fixed;z-index:30;width:min(560px,45vw);aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#000;box-shadow:var(--shadow-lg);pointer-events:none;opacity:0;transform:scale(.97);transition:opacity .15s,transform .15s;display:grid;place-items:center}
+#pv.on{opacity:1;transform:none}
+#pv img{position:relative;width:100%;height:100%;object-fit:contain}
+@media (hover:none){#pv{display:none}}
 .lrow b{font-weight:600;letter-spacing:-.01em}
 .lrow .sub{font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lrow .num{font-weight:500}
@@ -248,8 +294,8 @@ details summary::-webkit-details-marker{display:none}
 @keyframes sk{to{background-position:-200% 0}}
 
 @media (max-width:860px){.stats{grid-template-columns:repeat(2,1fr)}
-  .lrow{grid-template-columns:80px 1fr auto;gap:12px}.lrow .c-mkt,.lrow .c-loc,.lrow .c-st{display:none}
-  .lrow+.lrow::before{left:108px}.lthumb{width:80px;height:60px}.lhead{display:none}
+  .lrow{grid-template-columns:120px 1fr auto;gap:12px}.lrow .c-mkt,.lrow .c-loc,.lrow .c-st{display:none}
+  .lrow+.lrow::before{left:144px}.lthumb{width:120px;height:90px}.lhead{display:none}
   .lrow .c-ask{text-align:right}.lrow .c-pct{grid-column:3;grid-row:1;align-self:end;display:none}}
 @media (max-width:600px){
   .bar-in,main{padding-left:16px;padding-right:16px}
@@ -269,9 +315,12 @@ details summary::-webkit-details-marker{display:none}
 <div class="dlg" id="dlg"><div class="dlg-c" id="dlgc"></div></div>
 <div class="toast" id="toast"></div>
 <div class="lb" id="lb" onclick="if(event.target===this)closeLb()"></div>
+<div id="pv"></div>
 
 <script>
+const ACTIVE = ['new','needs_valuation','draft','contacted','negotiating','agreed','agreement_sent','inspection','documents','dms_loaded','selling','seller_paid','in_stock','invoiced','transport','payment_received','delivered'];
 const TABS = [
+  { key: 'pipeline', label: 'Pipeline', stages: ACTIVE.filter(k => k !== 'new') },
   { key: 'approve', label: 'To approve', stages: ['draft'] },
   { key: 'talking', label: 'Conversations', stages: ['contacted', 'negotiating'] },
   { key: 'deals', label: 'Deals', stages: ['agreed','agreement_sent','inspection','documents','dms_loaded','selling','seller_paid','in_stock','invoiced','transport','payment_received'] },
@@ -295,10 +344,33 @@ const EMPTY = {
   rejected: ['—', 'Nothing passed on', 'Cars outside your buying criteria show here.'],
 };
 
+let dealerInfo = { dealers: [], canEmail: false, canSms: false }, salePoll;
+let stepFilter = null;
 let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null, view = 'grid', gi = 0, contactOnly = false;
 try { view = localStorage.getItem('c2t_view') || 'grid'; contactOnly = localStorage.getItem('c2t_contact') === '1'; } catch {}
 const hasContact = l => !!(l.seller.phone || l.seller.email);
 // Small "Phone" / "Email" / "Marketplace" tags so you can see how each seller can be reached
+// How long a car has sat at its current step, and when that's too long
+const STUCK_DAYS = { draft: 2, contacted: 3, negotiating: 4, agreed: 2, agreement_sent: 2, inspection: 3, documents: 3, dms_loaded: 2, selling: 3, seller_paid: 2, in_stock: 3, invoiced: 3, transport: 3, payment_received: 2, needs_valuation: 3 };
+const daysAt = l => {
+  const since = [...(l.history || [])].reverse().find(h => h.to === l.stage)?.at || l.firstSeenAt || l.updatedAt;
+  return since ? Math.floor((Date.now() - new Date(since)) / 86400000) : 0;
+};
+const isStuck = l => STUCK_DAYS[l.stage] != null && daysAt(l) >= STUCK_DAYS[l.stage];
+const stepText = l => {
+  const st = stageStep(l.stage), d = daysAt(l);
+  const base = st ? `Step ${st} · ${stageLabel(l.stage)}` : stageLabel(l.stage);
+  return d ? `${base} · ${d}d` : base;
+};
+const topBidOf = s => (s?.bids || []).reduce((b, x) => !b || x.amount > b.amount ? x : b, null);
+const saleLine = l => {
+  const s = l.sale; if (!s) return '';
+  const top = topBidOf(s), ended = s.status === 'ended' || (s.status === 'open' && new Date(s.closesAt) <= Date.now());
+  if (s.status === 'sold') return `Sold to ${l.deal?.buyingDealer} · ${money(l.deal?.salePrice)}`;
+  if (ended) return `Bidding ended · ${top ? 'top ' + money(top.amount) : 'no bids'}${top && top.amount < s.reserve ? ' (under reserve)' : ''}`;
+  if (s.status === 'open') return `Bidding open · ${s.bids.length} bid${s.bids.length === 1 ? '' : 's'}${top ? ' · top ' + money(top.amount) : ''}`;
+  return '';
+};
 const contactTags = l => `<span class="ct">${l.seller.phone ? '<i>Phone</i>' : ''}${l.seller.email ? '<i>Email</i>' : ''}${!hasContact(l) ? '<i class="m">Marketplace only</i>' : ''}</span>`;
 let token = '';
 try { token = localStorage.getItem('c2t_admin') || ''; } catch {}
@@ -308,6 +380,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = n => n == null || isNaN(n) ? '—' : (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-AU');
 const kmFmt = n => n == null ? '— km' : Math.round(n).toLocaleString('en-AU') + ' km';
+const variantOf = l => { const t = (l.vehicle.variant || '').trim(); return !t || t.length > 40 || t.split(' ').length > 6 || /[:!?…]|\.\.|\b(selling|regret|mileage|kms?|condition|owner|negotiable|price|immaculate|excellent|stunning|beautiful|perfect|(19|20)\d\d)\b/i.test(t) ? '' : t; };
 const carName = l => [l.vehicle.year, l.vehicle.make, l.vehicle.model].filter(Boolean).join(' ');
 const stageLabel = k => meta?.stages.find(s => s.key === k)?.label || k;
 const stageStep = k => meta?.stages.find(s => s.key === k)?.step || 0;
@@ -360,9 +433,11 @@ function signOut() { try { localStorage.removeItem('c2t_admin'); } catch {} cons
 // ── data ──
 async function load() {
   if (!meta) meta = await api('/api/meta');
-  leads = await api('/api/leads');
+  [leads, dealerInfo] = await Promise.all([api('/api/leads'), api('/api/admin/dealers').catch(() => dealerInfo)]);
   if (!$('grid')) shell();
   render();
+  const pend = dealerInfo.dealers.filter(d => d.status === 'pending').length;
+  $('dpend').hidden = !pend; $('dpend').textContent = pend;
 }
 
 function shell() {
@@ -372,6 +447,7 @@ function shell() {
     <div class="logo"><i>C</i><b>Click2Trade</b></div>
     <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5" stroke-linecap="round"/></svg>
       <input id="q" placeholder="Search cars, sellers, suburbs" oninput="query=this.value.toLowerCase();render()"></label>
+    <button class="hdr-btn" onclick="openDealers()">Dealers<span class="n" id="dpend" hidden></span></button>
   </div></header>
   <main>
     <section class="hero">
@@ -382,7 +458,8 @@ function shell() {
     <div class="toolbar"><div class="seg" id="seg" role="tablist"></div>
       <div class="tools-r"><button class="fchip" id="fc" onclick="toggleContact()" aria-pressed="false">With phone or email<span class="c" id="fcn"></span></button><label class="sort">Sort by <select id="sort" onchange="sort=this.value;render()">
         <option value="deal">Best deal</option><option value="new">Newest</option><option value="price">Lowest price</option><option value="km">Lowest km</option></select></label>
-        <div class="viewsw" role="group" aria-label="View"><button id="vg" onclick="setView('grid')" aria-label="Grid view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="6" height="6" rx="1.5"/><rect x="8" width="6" height="6" rx="1.5"/><rect y="8" width="6" height="6" rx="1.5"/><rect x="8" y="8" width="6" height="6" rx="1.5"/></svg></button><button id="vl" onclick="setView('list')" aria-label="List view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="14" height="2.4" rx="1.2"/><rect y="5.8" width="14" height="2.4" rx="1.2"/><rect y="11.6" width="14" height="2.4" rx="1.2"/></svg></button></div></div></div>
+        <div class="viewsw" role="group" aria-label="View"><button id="vg" onclick="setView('grid')" aria-label="Grid view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="6" height="6" rx="1.5"/><rect x="8" width="6" height="6" rx="1.5"/><rect y="8" width="6" height="6" rx="1.5"/><rect x="8" y="8" width="6" height="6" rx="1.5"/></svg></button><button id="vl" onclick="setView('list')" aria-label="List view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="14" height="2.4" rx="1.2"/><rect y="5.8" width="14" height="2.4" rx="1.2"/><rect y="11.6" width="14" height="2.4" rx="1.2"/></svg></button><button id="vb" onclick="setView('board')" aria-label="Board view"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="3.6" height="14" rx="1.2"/><rect x="5.2" width="3.6" height="9" rx="1.2"/><rect x="10.4" width="3.6" height="11.5" rx="1.2"/></svg></button></div></div></div>
+    <div class="strip" id="strip" hidden></div>
     <section class="grid" id="grid"></section>
   </main>`;
 }
@@ -395,7 +472,7 @@ function render() {
   const unread = leads.filter(l => l.unread).length;
   $('sum').textContent = toApprove ? `${toApprove} car${toApprove > 1 ? 's' : ''} ready for your approval${unread ? ` · ${unread} new repl${unread > 1 ? 'ies' : 'y'}` : ''}.` : unread ? `${unread} new repl${unread > 1 ? 'ies' : 'y'} from sellers.` : 'You’re all caught up.';
 
-  const deals = leads.filter(l => TABS[2].stages.includes(l.stage));
+  const deals = leads.filter(l => TABS.find(t => t.key === 'deals').stages.includes(l.stage));
   const margin = deals.reduce((s, l) => s + ((l.deal?.salePrice || l.valuation?.market || 0) - (l.deal?.agreedPrice || 0)), 0);
   const upside = leads.filter(l => l.stage === 'draft').reduce((s, l) => s + Math.max(0, (l.valuation?.market || 0) - (l.askingPrice || 0)), 0);
   $('stats').innerHTML = [
@@ -409,6 +486,15 @@ function render() {
 
   const t = TABS.find(t => t.key === tab);
   let rows = leads.filter(l => t.stages.includes(l.stage));
+  // Step-by-step strip on the Pipeline and Deals tabs: tap a step to see only those cars
+  const showStrip = ['pipeline', 'deals'].includes(tab) && view !== 'board';
+  $('strip').hidden = !showStrip;
+  if (showStrip) {
+    const cnt = k => rows.filter(l => l.stage === k).length;
+    $('strip').innerHTML = `<button class="${stepFilter ? '' : 'on'}" onclick="stepFilter=null;render()"><span class="sn">ALL STEPS</span><span class="sl">Everything</span><span class="sc num">${rows.length}</span></button>`
+      + t.stages.map(k => `<button class="${stepFilter === k ? 'on' : ''} ${cnt(k) ? '' : 'zero'}" onclick="stepFilter='${k}';render()"><span class="sn">STEP ${stageStep(k)}</span><span class="sl">${esc(stageLabel(k))}</span><span class="sc num">${cnt(k)}</span></button>`).join('');
+    if (stepFilter && t.stages.includes(stepFilter)) rows = rows.filter(l => l.stage === stepFilter);
+  }
   $('fcn').textContent = rows.filter(hasContact).length;
   $('fc').classList.toggle('on', contactOnly); $('fc').setAttribute('aria-pressed', contactOnly);
   if (contactOnly) rows = rows.filter(hasContact);
@@ -421,13 +507,15 @@ function render() {
   };
   rows.sort((a, b) => (b.unread ? 1 : 0) - (a.unread ? 1 : 0) || sorters[sort](a, b));
 
+  $('vg').classList.toggle('on', view === 'grid'); $('vl').classList.toggle('on', view === 'list'); $('vb').classList.toggle('on', view === 'board');
+  if (view === 'board') { renderBoard(t.stages, rows); return; }
+
   if (!rows.length) {
     const [ic, h3, p] = query ? ['🔍', 'No results', `Nothing matches “${query}”.`]
       : contactOnly ? ['📵', 'No sellers with contact info here', 'Turn off “With phone or email” to see every car.'] : EMPTY[tab];
     $('grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ic">${ic}</div><h3>${esc(h3)}</h3><p>${esc(p)}</p></div>`;
     return;
   }
-  $('vg').classList.toggle('on', view === 'grid'); $('vl').classList.toggle('on', view === 'list');
   if (view === 'list') {
     $('grid').className = 'list';
     $('grid').innerHTML = `<div class="lrow lhead"><span></span><span>Vehicle</span><span>Asking</span><span>Market</span><span>Below</span><span>Location</span><span>Status</span></div>` + rows.map(listRow).join('');
@@ -439,19 +527,58 @@ function render() {
 
 function toggleContact() { contactOnly = !contactOnly; try { localStorage.setItem('c2t_contact', contactOnly ? '1' : '0'); } catch {} render(); }
 
+// What happens next at each step, in plain words (board cards)
+const NEXT_HINT = {
+  needs_valuation: 'Set a market value', draft: 'Approve & send the intro', contacted: 'Waiting for the seller to reply',
+  negotiating: 'Agree a price', agreed: 'Send the purchase agreement', agreement_sent: 'Get it signed, book inspection',
+  inspection: 'Inspect, then collect documents', documents: 'Finish the document checklist', dms_loaded: 'Offer to dealers',
+  selling: 'Pay the seller', seller_paid: 'Bring into stock', in_stock: 'Invoice the buying dealer',
+  invoiced: 'Arrange transport', transport: 'Dealer pays within 72h', payment_received: 'Dispose to the buying dealer',
+};
+// ── board: one column per step; drag a car to move it ──
+function renderBoard(stages, rows) {
+  $('grid').className = 'board';
+  $('grid').innerHTML = stages.map(k => {
+    const cs = rows.filter(l => l.stage === k);
+    return `<div class="col" data-stage="${k}" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropOn(event,'${k}')">
+      <h4><span><small>STEP ${stageStep(k) || '—'}</small>${esc(stageLabel(k))}</span><span class="n">${cs.length}</span></h4>
+      ${cs.map(boardCard).join('') || '<div class="empty-c">Nothing here</div>'}</div>`;
+  }).join('');
+}
+function boardCard(l) {
+  const d = daysAt(l), next = NEXT_HINT[l.stage];
+  return `<button class="bcard" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${l.id}');this.classList.add('drag')" ondragend="this.classList.remove('drag')" onclick="openLead('${l.id}')">
+    <span class="bt">${photo(l) ? `<img loading="lazy" src="${esc(photo(l))}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<span class="mono">${mono(l)}</span></span>
+    <span style="min-width:0;flex:1"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b>
+      <span class="sub" style="display:block">${money(l.deal?.salePrice || l.deal?.agreedPrice || l.askingPrice)} · ${kmFmt(l.vehicle.km)}</span>
+      <span class="sub ${isStuck(l) ? 'stuck' : ''}" style="display:block">${l.alerts.length ? '⚠︎ ' + esc(l.alerts[0]) : saleLine(l) ? esc(saleLine(l)) : d ? `${d} day${d === 1 ? '' : 's'} at this step` : 'Today'}</span>
+      ${next && l.stage !== 'delivered' ? `<span class="nx">Next: ${esc(next)}</span>` : ''}</span></button>`;
+}
+async function dropOn(e, stage) {
+  e.preventDefault(); e.currentTarget.classList.remove('over');
+  const id = e.dataTransfer.getData('text/plain'), l = leads.find(x => x.id === id);
+  if (!l || l.stage === stage) return;
+  if (stage === 'contacted' && l.stage === 'draft') { toast('Open the car and approve the intro to send it'); return; }
+  try {
+    await api('/api/leads/' + id + '/stage', { method: 'POST', body: { stage } });
+    toast(`${carName(l)} → ${stageLabel(stage)} ✓`);
+    load();
+  } catch {}
+}
+
 function setView(v) { view = v; try { localStorage.setItem('c2t_view', v); } catch {} render(); }
 
 function listRow(l) {
   const v = l.vehicle, mkt = l.valuation?.market, d = l.discountPct;
-  const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stageLabel(l.stage);
+  const status = saleLine(l) || (['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : stepText(l));
   return `<button class="lrow" onclick="openLead('${l.id}')">
-    <span class="lthumb">${pic(photo(l))}<span class="mono">${mono(l)}</span></span>
-    <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([v.variant, kmFmt(v.km)].filter(Boolean).join(' · '))}</div><div style="margin-top:3px">${contactTags(l)}</div></span>
+    <span class="lthumb" onclick="event.stopPropagation();viewPhotos('${l.id}')" onmouseenter="showPv(event,'${l.id}')" onmousemove="movePv(event)" onmouseleave="hidePv()">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="pc">${photos(l).length}</span>` : ''}</span>
+    <span style="min-width:0"><b>${l.unread ? '<span class="dot"></span>' : ''}${esc(carName(l))}</b><div class="sub">${esc([variantOf(l), kmFmt(v.km)].filter(Boolean).join(' · '))}</div><div style="margin-top:3px">${contactTags(l)}</div></span>
     <span class="num c-ask">${money(l.deal?.agreedPrice || l.askingPrice)}<div class="sub" style="font-weight:400">${l.deal?.agreedPrice ? 'Agreed' : ''}</div></span>
     <span class="num c-mkt">${money(mkt)}<div class="sub" style="font-weight:400">${l.valuation?.method === 'ai' ? 'AI estimate' : l.valuation ? 'Market' : ''}</div></span>
     <span class="c-pct">${d == null ? '<span class="sub">—</span>' : `<span class="badge ${d >= meta.criteria.minDiscountPct ? 'g' : d > 0 ? 'o' : 'n'}">${d}%</span>`}</span>
     <span class="sub c-loc">${esc([l.location.suburb, l.location.state].filter(Boolean).join(', '))}</span>
-    <span class="st c-st">${l.alerts.length ? `<span style="color:var(--red)">⚠︎ ${esc(l.alerts[0])}</span>` : esc(status)}</span>
+    <span class="st c-st ${isStuck(l) ? 'stuck' : ''}">${l.alerts.length ? `<span style="color:var(--red)">⚠︎ ${esc(l.alerts[0])}</span>` : esc(status)}</span>
   </button>`;
 }
 
@@ -465,14 +592,14 @@ function dealBadge(l) {
 function card(l) {
   const v = l.vehicle, mkt = l.valuation?.market;
   const pct = mkt && l.askingPrice ? Math.max(4, Math.min(100, l.askingPrice / mkt * 100)) : 0;
-  const status = ['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stageLabel(l.stage);
+  const status = saleLine(l) || (['rejected', 'lost', 'opted_out'].includes(l.stage) ? (l.rejectReason || stageLabel(l.stage)) : tab === 'approve' ? [l.location.suburb, l.location.state].filter(Boolean).join(', ') : stepText(l));
   const last = (l.thread || []).slice(-1)[0];
   return `<button class="card" onclick="openLead('${l.id}')">
-    <div class="ph">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="badge n" style="position:absolute;top:auto;left:auto;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff">${photos(l).length} photos</span>` : ''}
+    <div class="ph" onclick="event.stopPropagation();viewPhotos('${l.id}')">${pic(photo(l))}<span class="mono">${mono(l)}</span>${photos(l).length > 1 ? `<span class="badge n" style="position:absolute;top:auto;left:auto;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff">${photos(l).length} photos</span>` : ''}
       <div style="position:absolute;top:12px;left:12px">${dealBadge(l)}</div>
       ${l.unread ? '<span class="unread">New reply</span>' : ''}</div>
     <div class="cb">
-      <div><h3>${esc(carName(l))}</h3><div class="sub">${esc(v.variant || '')}${v.variant ? ' · ' : ''}${kmFmt(v.km)}${v.condition && v.condition !== 'Unknown' ? ' · ' + esc(v.condition) : ''}</div></div>
+      <div><h3>${esc(carName(l))}</h3><div class="sub">${esc(variantOf(l))}${variantOf(l) ? ' · ' : ''}${kmFmt(v.km)}${v.condition && v.condition !== 'Unknown' ? ' · ' + esc(v.condition) : ''}</div></div>
       <div class="prices"><span class="ask num">${money(l.deal?.agreedPrice || l.askingPrice)}</span><span class="mkt num">${l.deal?.agreedPrice ? 'Agreed' : mkt ? (l.valuation.method === 'ai' ? 'AI est. ' : 'Market ') + money(mkt) : ''}</span></div>
       ${mkt ? `<div class="meter"><b style="width:${pct}%"></b></div>` : ''}
       ${l.alerts.map(a => `<div class="alert">⚠︎ ${esc(a)}</div>`).join('')}
@@ -483,7 +610,7 @@ function card(l) {
     </div></button>`;
 }
 
-function setTab(k) { tab = k; render(); window.scrollTo({ top: $('seg').offsetTop - 80, behavior: 'smooth' }); }
+function setTab(k) { tab = k; stepFilter = null; render(); window.scrollTo({ top: $('seg').offsetTop - 80, behavior: 'smooth' }); }
 
 // ── detail sheet ──
 async function openLead(id) {
@@ -513,7 +640,7 @@ function draw() {
     ${l.url ? `<a class="link" href="${esc(l.url)}" target="_blank" rel="noopener">Listing ↗</a>` : ''}</div><div class="sh-body">`);
 
   h.push(`${gallery(l)}
-    <div class="sh-title"><h2>${esc(carName(l))}</h2><p>${esc([v.variant, kmFmt(v.km), [l.location.suburb, l.location.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</p>
+    <div class="sh-title"><h2>${esc(carName(l))}</h2><p>${esc([variantOf(l), kmFmt(v.km), [l.location.suburb, l.location.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</p>
     <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${dealBadge(l)}${l.flags.map(f => `<span class="badge ${f === 'written_off' || f === 'dealer' ? 'r' : 'o'}">${flagLabel(f)}</span>`).join('')}</div></div>`);
 
   h.push(`<div class="deal-box">
@@ -606,6 +733,8 @@ function draw() {
       ${docs.financeOwing ? `<label class="row"><span class="l">Payout valid until</span><input type="date" data-doc="payoutValidUntil" value="${esc(docs.payoutValidUntil || '')}" onchange="autosave(true)"></label>` : ''}
     </div><div class="group-f">${l.checklist.complete ? '✓ Ready to transact' : `${l.checklist.items.filter(i => !i.done).length} still needed before payment`}</div>
 
+    ${saleSection(l)}
+
     <div class="group-t">Resale</div><div class="group">
       ${inRow('Easy Cars stock #', 'dmsStockNumber', d.dmsStockNumber, 'text', '—')}
       ${inRow('Dealer offers', 'dealerBids', d.dealerBids, 'text', 'Dealer A $41k, Dealer B…')}
@@ -653,7 +782,26 @@ function redrawGal() {
 }
 function step(d) { const n = photos(current).length; if (n < 2) return; gi = (gi + d + n) % n; redrawGal(); }
 function openLb() { if (!photos(current).length) return; drawLb(); $('lb').classList.add('on'); }
-function closeLb() { $('lb').classList.remove('on'); }
+function closeLb() { $('lb').classList.remove('on'); if (!$('sheet').classList.contains('on')) current = null; }
+// Open the full-screen viewer straight from a card or list row
+function viewPhotos(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l || !photos(l).length) return openLead(id);
+  hidePv(); current = l; gi = 0; openLb();
+}
+// Large preview while hovering a list thumbnail (desktop)
+function showPv(e, id) {
+  const l = leads.find(x => x.id === id); if (!l || !photo(l)) return;
+  $('pv').innerHTML = pic(photo(l)); $('pv').classList.add('on'); movePv(e);
+}
+function movePv(e) {
+  const pv = $('pv'), w = pv.offsetWidth, h = pv.offsetHeight;
+  let x = e.clientX + 24, y = e.clientY - h / 2;
+  if (x + w > innerWidth - 12) x = e.clientX - w - 24;
+  y = Math.max(12, Math.min(y, innerHeight - h - 12));
+  pv.style.left = x + 'px'; pv.style.top = y + 'px';
+}
+function hidePv() { $('pv').classList.remove('on'); }
 function drawLb() {
   const ps = photos(current);
   $('lb').innerHTML = `<button class="x" onclick="closeLb()" aria-label="Close">✕</button><img src="${esc(ps[gi])}" alt="" referrerpolicy="no-referrer">
@@ -674,6 +822,125 @@ document.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - tx; tx = null;
   if (Math.abs(dx) > 40) { step(dx < 0 ? 1 : -1); e.preventDefault(); }
 });
+
+// ── selling to dealers ──
+const SELL_STAGES = ['agreed', 'agreement_sent', 'inspection', 'documents', 'dms_loaded', 'selling', 'seller_paid', 'in_stock'];
+function saleSection(l) {
+  const s = l.sale, d = l.deal || {};
+  if (!s && !SELL_STAGES.includes(l.stage)) return '';
+  const top = topBidOf(s);
+  const ended = s && (s.status === 'ended' || (s.status === 'open' && new Date(s.closesAt) <= Date.now()));
+  const approved = dealerInfo.dealers.filter(x => x.status === 'approved').length;
+
+  if (s?.status === 'sold') {
+    const margin = d.agreedPrice ? d.salePrice - d.agreedPrice : null;
+    return `<div class="group-t">Sell to dealers</div><div class="sale">
+      <div class="top"><b>✓ Sold to ${esc(d.buyingDealer)}</b><span class="badge g">${money(d.salePrice)}</span></div>
+      <div class="sub">${margin != null ? `Margin <b style="color:${margin >= 0 ? 'var(--green)' : 'var(--red)'}">${money(margin)}</b> · ` : ''}${s.bids.length} bids from ${new Set(s.bids.map(b => b.dealerId)).size} dealers</div></div>`;
+  }
+
+  const bidsList = s?.bids?.length ? s.bids.slice().sort((a, b) => b.amount - a.amount || a.at.localeCompare(b.at)).map((b, i) => `
+    <div class="bidrow"><div class="who"><b>${esc(b.dealerName)}</b>${i === 0 ? ' <span class="badge g">Top</span>' : ''}<div>${ago(b.at)}</div></div>
+      <span class="amt num">${money(b.amount)}</span>
+      <button class="btn sm ${i === 0 ? '' : 'sec'}" onclick="acceptBid('${b.id}','${esc(b.dealerName).replace(/'/g, '')}',${b.amount})">Accept</button></div>`).join('') : '<p class="sub" style="padding:10px 0 2px">No bids yet.</p>';
+
+  if (s?.status === 'open' && !ended) {
+    return `<div class="group-t">Sell to dealers</div><div class="sale">
+      <div class="top"><b>Bidding open</b><span class="sub" data-close="${s.closesAt}">${closesIn(s.closesAt)}</span></div>
+      <div class="figs">
+        <div><div class="k">Top bid</div><div class="v num">${top ? money(top.amount) : '—'}</div></div>
+        <div><div class="k">Reserve</div><div class="v num">${money(s.reserve)}</div></div>
+        <div><div class="k">Bids</div><div class="v num">${s.bids.length}</div></div>
+      </div>
+      <div class="sub">${top && top.amount >= s.reserve ? '<span class="badge g">Reserve met</span> ' : ''}${s.autoAccept ? 'Top bid at or above reserve wins automatically at close.' : 'You’ll choose the winner when bidding closes.'}${s.invited?.emailed || s.invited?.texted ? ` Invited ${s.invited.emailed} by email${s.invited.texted ? `, ${s.invited.texted} by text` : ''}.` : ''}</div>
+      ${bidsList}
+      <div class="actions"><button class="btn sec sm" onclick="endSale()">End without selling</button></div></div>`;
+  }
+
+  const relist = s && ['ended', 'unsold', 'open'].includes(s.status);
+  const desc = [[l.vehicle.year, l.vehicle.make, l.vehicle.model, variantOf(l)].filter(Boolean).join(' '), kmFmt(l.vehicle.km), l.vehicle.condition && l.vehicle.condition !== 'Unknown' ? 'Condition: ' + l.vehicle.condition : '', d.inspectionResult ? 'Inspection: ' + d.inspectionResult : ''].filter(Boolean).join('\n');
+  return `<div class="group-t">Sell to dealers</div>
+    ${relist ? `<div class="sale" style="margin-bottom:12px"><div class="top"><b>Bidding ended</b><span class="sub">${top ? 'Top ' + money(top.amount) + (top.amount < s.reserve ? ' · under reserve' : '') : 'No bids'}</span></div>${bidsList}</div>` : ''}
+    <div class="group">
+      <label class="row"><span class="l">Reserve (lowest you’ll take)</span><input id="sv_res" type="number" inputmode="numeric" placeholder="$0" value="${s?.reserve || ''}"></label>
+      <label class="row"><span class="l">Starting bid <span class="sub">(optional)</span></span><input id="sv_start" type="number" inputmode="numeric" placeholder="$0"></label>
+      <label class="row"><span class="l">Bidding open for</span><select id="sv_hrs" style="max-width:140px">${[[2, '2 hours'], [6, '6 hours'], [12, '12 hours'], [24, '24 hours'], [48, '2 days'], [72, '3 days']].map(([h, t]) => `<option value="${h}" ${h === 24 ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      <label class="row"><span class="l">Show top bid to dealers</span><span class="sw"><input type="checkbox" id="sv_show" checked><span></span></span></label>
+      <label class="row"><span class="l">Auto-accept top bid at or above reserve</span><span class="sw"><input type="checkbox" id="sv_auto" checked><span></span></span></label>
+      <label class="row"><span class="l">Email dealers</span><span class="sw"><input type="checkbox" id="sv_em" ${dealerInfo.canEmail ? 'checked' : 'disabled'}><span></span></span></label>
+      ${dealerInfo.canSms ? `<label class="row"><span class="l">Text dealers who opted in</span><span class="sw"><input type="checkbox" id="sv_sms"><span></span></span></label>` : ''}
+    </div>
+    <div class="field-l"><span>What dealers see about this car</span></div>
+    <textarea class="txt" id="sv_desc" placeholder="Condition, service history, extras, damage…">${esc(s?.description || desc)}</textarea>
+    <div class="group-f">Dealers never see the seller’s details, your purchase price, or the original listing.${dealerInfo.canEmail ? '' : ' Email isn’t set up yet (RESEND_API_KEY), so dealers will only see it when they log in.'}</div>
+    <div class="actions"><button class="btn wide" onclick="openSale()" ${approved ? '' : 'disabled'}>${relist ? 'Relist for bids' : 'Open bidding'} · ${approved} approved dealer${approved === 1 ? '' : 's'}</button></div>
+    ${approved ? '' : '<div class="group-f">Approve at least one dealer first (Dealers button, top right). Dealers sign up at <b>/dealer</b>.</div>'}`;
+}
+function closesIn(iso) {
+  const ms = new Date(iso) - Date.now(); if (ms <= 0) return 'Closed';
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60), dd = Math.floor(h / 24);
+  return 'Closes in ' + (dd ? `${dd}d ${h % 24}h` : h ? `${h}h ${m % 60}m` : `${m}m ${Math.floor(ms / 1000) % 60}s`);
+}
+setInterval(() => document.querySelectorAll('[data-close]').forEach(el => el.textContent = closesIn(el.dataset.close)), 1000);
+
+async function openSale() {
+  const reserve = Number($('sv_res').value);
+  if (!reserve) { toast('Set a reserve — the lowest price you’ll sell for'); return; }
+  if (!await dialog({ title: 'Open bidding?', text: `Approved dealers ${$('sv_em')?.checked ? 'will be emailed and ' : ''}can bid for ${$('sv_hrs').selectedOptions[0].text}. Reserve ${money(reserve)}.`, ok: 'Open bidding' })) return;
+  await saveNow();
+  const r = await api(`/api/leads/${current.id}/sale`, { method: 'POST', body: {
+    reserve, startPrice: Number($('sv_start').value) || 0, hours: Number($('sv_hrs').value), description: $('sv_desc').value,
+    showHighest: $('sv_show').checked, autoAccept: $('sv_auto').checked, notifyEmail: !!$('sv_em')?.checked, notifySms: !!$('sv_sms')?.checked, moveStage: true,
+  } });
+  current = r.lead;
+  toast(`Bidding open ✓ ${r.invited.emailed ? `· ${r.invited.emailed} emailed` : ''}`);
+  draw(); load();
+}
+async function acceptBid(bidId, name, amount) {
+  if (!await dialog({ title: `Sell to ${name}?`, text: `For ${money(amount)}. Bidding closes and the other dealers are told.`, ok: 'Accept bid' })) return;
+  current = await api(`/api/leads/${current.id}/sale/accept`, { method: 'POST', body: { bidId } });
+  toast('Sold ✓'); draw(); load();
+}
+async function endSale() {
+  if (!await dialog({ title: 'End bidding without selling?', text: 'You can relist it afterwards.', ok: 'End bidding', danger: true })) return;
+  current = await api(`/api/leads/${current.id}/sale/close`, { method: 'POST' });
+  draw(); load();
+}
+// Keep an open sale's bids live while its sheet is open
+setInterval(async () => {
+  if (!current || current.sale?.status !== 'open' || !$('sheet').classList.contains('on') || document.activeElement?.closest('#sheet input,#sheet textarea')) return;
+  try {
+    const fresh = await api('/api/leads/' + current.id);
+    if (JSON.stringify(fresh.sale) !== JSON.stringify(current.sale)) { current = fresh; draw(); }
+  } catch {}
+}, 15000);
+
+// ── dealer accounts ──
+async function openDealers() {
+  dealerInfo = await api('/api/admin/dealers');
+  current = null;
+  const groups = [['pending', 'Waiting for approval'], ['approved', 'Approved'], ['suspended', 'Suspended']];
+  const portal = location.origin + '/dealer';
+  $('sheet').innerHTML = `<div class="sh-head"><button class="x" onclick="closeLead()" aria-label="Close">✕</button><span class="t">Dealers</span></div>
+    <div class="sh-body"><div class="sh-title"><h2>Dealers</h2><p>Dealers sign up at <a href="${portal}" target="_blank" rel="noopener">${esc(portal)}</a>. Check their licence before approving.</p></div>
+    <div class="actions" style="margin-top:8px"><button class="btn sec sm" onclick="navigator.clipboard?.writeText('${portal}');toast('Link copied')">Copy sign-up link</button></div>
+    ${dealerInfo.dealers.length ? groups.map(([k, t]) => {
+      const ds = dealerInfo.dealers.filter(d => d.status === k); if (!ds.length) return '';
+      return `<div class="group-t">${t} · ${ds.length}</div><div class="group">${ds.map(d => `
+        <div class="drow"><div class="info"><b>${esc(d.businessName)}</b>
+          <div>${esc(d.licence)}${d.abn ? ' · ABN ' + esc(d.abn) : ''} · ${esc([d.suburb, d.state].filter(Boolean).join(', '))}</div>
+          <div>${esc(d.contactName)} · <a href="mailto:${esc(d.email)}">${esc(d.email)}</a> · <a href="tel:${esc(d.phone)}">${esc(d.phone)}</a></div>
+          <div>${d.bidCount} bids · ${d.won} won · joined ${ago(d.createdAt)}</div></div>
+          <div class="acts">${k !== 'approved' ? `<button class="btn sm" onclick="setDealer('${d.id}','approved')">Approve</button>` : ''}${k !== 'suspended' ? `<button class="btn sm ${k === 'pending' ? 'danger' : 'sec'}" onclick="setDealer('${d.id}','suspended')">${k === 'pending' ? 'Decline' : 'Suspend'}</button>` : ''}</div></div>`).join('')}</div>`;
+    }).join('') : `<div class="empty"><div class="ic">🏢</div><h3>No dealers yet</h3><p>Share the sign-up link with dealers you want to sell to.</p></div>`}
+    ${dealerInfo.canEmail ? '' : '<div class="group-f" style="margin-top:16px">Email isn’t set up yet (RESEND_API_KEY), so dealers won’t get approval or new-stock emails. Let them know when they’re approved.</div>'}
+    </div>`;
+  $('sheet').classList.add('on'); $('scrim').classList.add('on'); document.body.style.overflow = 'hidden';
+}
+async function setDealer(id, status) {
+  await api('/api/admin/dealers/' + id, { method: 'PATCH', body: { status } });
+  toast(status === 'approved' ? 'Approved ✓' : 'Updated'); openDealers(); load();
+}
 
 function smsLen() { const s = $('sms'), o = $('smslen'); if (s && o) o.textContent = `${s.value.length} · ${Math.ceil(s.value.length / 153) || 1} SMS`; }
 function pickCh(b) { b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }

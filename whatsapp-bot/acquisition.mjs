@@ -65,7 +65,7 @@ async function qualify(lead, pool) {
 }
 
 // What the dashboard needs per lead
-function view(lead) {
+export function view(lead) {
   return { ...lead, checklist: documentChecklist(lead), alerts: alerts(lead) };
 }
 

@@ -8,6 +8,11 @@
 //     data jsonb not null,
 //     updated_at timestamptz default now()
 //   );
+//   create table dealers (              -- dealer accounts for the bidding portal
+//     id text primary key,
+//     data jsonb not null,
+//     updated_at timestamptz default now()
+//   );
 //   create table suppressions (
 //     contact text primary key,          -- normalised phone or lowercase email
 //     reason text,
@@ -36,13 +41,14 @@ async function loadFile() {
   } catch {
     cache = { leads: {}, suppressions: {} };
   }
+  cache.dealers = cache.dealers || {};
   return cache;
 }
 
 let writing = Promise.resolve();
 function saveFile() {
   // Serialise writes so concurrent saves don't clobber each other
-  writing = writing.then(async () => {
+  writing = writing.catch(() => {}).then(async () => {
     await fs.mkdir(DATA_DIR, { recursive: true });
     const tmp = FILE + '.tmp';
     await fs.writeFile(tmp, JSON.stringify(cache, null, 2));
@@ -111,4 +117,43 @@ export async function suppress(contact, reason = 'opt-out') {
   const db = await loadFile();
   db.suppressions[contact] = { reason, at: new Date().toISOString() };
   await saveFile();
+}
+
+// ── DEALERS ──
+export async function getDealer(id) {
+  if (supabase) {
+    const { data, error } = await supabase.from('dealers').select('data').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data?.data || null;
+  }
+  const db = await loadFile();
+  return db.dealers[id] || null;
+}
+
+export async function listDealers() {
+  if (supabase) {
+    const { data, error } = await supabase.from('dealers').select('data').order('updated_at', { ascending: false });
+    if (error) throw error;
+    return data.map(r => r.data);
+  }
+  const db = await loadFile();
+  return Object.values(db.dealers);
+}
+
+export async function saveDealer(dealer) {
+  dealer.updatedAt = new Date().toISOString();
+  if (supabase) {
+    const { error } = await supabase.from('dealers').upsert({ id: dealer.id, data: dealer, updated_at: dealer.updatedAt });
+    if (error) throw error;
+    return dealer;
+  }
+  const db = await loadFile();
+  db.dealers[dealer.id] = dealer;
+  await saveFile();
+  return dealer;
+}
+
+export async function findDealerByEmail(email) {
+  const e = String(email || '').trim().toLowerCase();
+  return (await listDealers()).find(d => d.email === e) || null;
 }
