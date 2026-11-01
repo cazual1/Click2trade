@@ -7,7 +7,7 @@ import OpenAI from 'openai';
 import twilio from 'twilio';
 import { createClient } from '@supabase/supabase-js';
 import { sendDealerOutreach, createInboundHandler } from './dealer-outreach.mjs';
-import { createAcquisitionRouter, handleSellerEmail, view } from './acquisition.mjs';
+import { createAcquisitionRouter, handleSellerEmail, handleSellerWhatsApp, view } from './acquisition.mjs';
 import { createDealerRouter } from './dealers.mjs';
 
 const app = express();
@@ -385,6 +385,9 @@ app.post('/webhook', async (req, res) => {
     const body = (req.body.Body || '').trim();
 
     if (!from || !body) return res.sendStatus(200);
+
+    // A seller we messaged about their listing is replying — route it to that car, not the selling bot
+    if (await handleSellerWhatsApp(from, body)) return res.sendStatus(200);
 
     const session = getSession(from);
 

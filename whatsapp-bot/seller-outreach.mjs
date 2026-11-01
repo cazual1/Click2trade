@@ -14,6 +14,11 @@ const {
   TWILIO_AUTH_TOKEN,
   TWILIO_SMS_NUMBER,             // plain SMS number, e.g. +61...  (not the WhatsApp one)
   TWILIO_MESSAGING_SERVICE_SID,  // or a Messaging Service (alphanumeric sender etc.)
+  TWILIO_WHATSAPP_NUMBER,        // e.g. "whatsapp:+61..." — same number the WhatsApp bot uses
+  // WhatsApp only lets a business message someone first with a Meta-approved template.
+  // Create them in Twilio Content Template Builder; variables: {{1}} first name, {{2}} car, {{3}} business name.
+  TWILIO_WA_INTRO_CONTENT_SID,
+  TWILIO_WA_FOLLOWUP_CONTENT_SID,
   RESEND_API_KEY,
   OPENAI_API_KEY,
   BUSINESS_NAME = 'Click2Trade',
@@ -78,6 +83,27 @@ async function sendSms(to, body) {
   return res.sid;
 }
 
+async function sendWhatsApp(to, body, template) {
+  if (!twilioClient || !TWILIO_WHATSAPP_NUMBER) throw new Error('WhatsApp not configured (TWILIO_WHATSAPP_NUMBER)');
+  const from = TWILIO_WHATSAPP_NUMBER.startsWith('whatsapp:') ? TWILIO_WHATSAPP_NUMBER : 'whatsapp:' + TWILIO_WHATSAPP_NUMBER;
+  const msg = { from, to: 'whatsapp:' + to };
+  // Without an approved template, only works inside a 24h window the seller opened (or the Twilio sandbox)
+  if (template?.sid) Object.assign(msg, { contentSid: template.sid, contentVariables: JSON.stringify(template.vars) });
+  else msg.body = body;
+  const res = await twilioClient.messages.create(msg);
+  return res.sid;
+}
+
+// Which channels can actually send right now
+export function channelsAvailable() {
+  return {
+    sms: !!(twilioClient && (TWILIO_SMS_NUMBER || TWILIO_MESSAGING_SERVICE_SID)),
+    email: !!RESEND_API_KEY,
+    whatsapp: !!(twilioClient && TWILIO_WHATSAPP_NUMBER),
+    whatsappTemplates: !!TWILIO_WA_INTRO_CONTENT_SID,
+  };
+}
+
 async function sendEmail(lead, to, subject, text) {
   if (!RESEND_API_KEY) throw new Error('Resend not configured (RESEND_API_KEY)');
   const res = await fetch('https://api.resend.com/emails', {
@@ -98,14 +124,15 @@ async function sendEmail(lead, to, subject, text) {
 
 // Send a message on one channel and log it to the lead's thread.
 // 'manual' = the seller only has a Marketplace profile; you paste the text into Messenger yourself.
-export async function sendToSeller(lead, channel, { body, subject } = {}) {
-  const contact = channel === 'sms' ? lead.seller.phone : channel === 'email' ? lead.seller.email : null;
+export async function sendToSeller(lead, channel, { body, subject, template } = {}) {
+  const contact = { sms: lead.seller.phone, email: lead.seller.email, whatsapp: lead.seller.whatsapp }[channel] || null;
   if (channel !== 'manual' && !contact) throw new Error(`No ${channel} contact for this seller`);
   if (contact && await isSuppressed(contact)) throw new Error(`${contact} has opted out`);
 
   let providerId = null;
   if (channel === 'sms') providerId = await sendSms(contact, body);
   if (channel === 'email') providerId = await sendEmail(lead, contact, subject, body);
+  if (channel === 'whatsapp') providerId = await sendWhatsApp(contact, body, template);
 
   lead.thread = lead.thread || [];
   lead.thread.push({ dir: 'out', channel, subject: subject || null, body, at: new Date().toISOString(), providerId });
@@ -167,4 +194,90 @@ Return only the message text.`,
     ],
   });
   return response.choices[0].message.content.trim();
+}
+
+// ── AI-PERSONALISED INTRO ──
+// The AI only writes the friendly opening about this particular car. Who we are, the dealer licence
+// and the opt-out are added here, so they're always present whatever the model writes.
+export async function aiIntro(lead) {
+  const base = draftMessages(lead);
+  if (!openai) return base;
+  const v = lead.vehicle;
+  const name = firstName(lead.seller.name);
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      max_tokens: 300,
+      temperature: 0.6,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `You write the opening of a first message from ${BUSINESS_NAME}, a licensed Australian car dealer, to a private seller whose car is advertised.
+Mention one or two genuine details from their listing so it doesn't read like a template. Friendly, straight-talking, Australian. Say we'd like to buy it and can pay fast and handle paperwork and pickup.
+NEVER mention a price, offer or valuation. Never invent facts. No greeting line, no sign-off — those are added separately.
+Return JSON: {"sms": "max 200 characters", "email_subject": "short", "email": "2-4 short sentences"}`,
+        },
+        {
+          role: 'user',
+          content: [`${v.year} ${v.make} ${v.model} ${v.variant || ''}`.trim(), v.km ? `${v.km.toLocaleString()} km` : '', lead.location?.suburb || '',
+            `Listing: ${(lead.title || '')} ${(lead.description || '').slice(0, 800)}`].filter(Boolean).join('\n'),
+        },
+      ],
+    });
+    const out = JSON.parse(response.choices[0].message.content);
+    const ok = t => typeof t === 'string' && t.trim().length > 20 && !/\$\s?\d|\d+\s?k\b|offer you|valued at/i.test(t);
+    if (!ok(out.sms) || !ok(out.email)) return base;
+    return {
+      sms: `Hi ${name}, ${out.sms.trim().replace(/^hi[^,]*,\s*/i, '')} - ${SENDER_NAME}, ${BUSINESS_NAME}${licence}. Reply STOP to opt out`,
+      email: {
+        subject: String(out.email_subject || base.email.subject).slice(0, 90),
+        body: `Hi ${name},
+
+${out.email.trim()}
+
+If you're open to it, reply to this email or call/text me${SENDER_PHONE ? ` on ${SENDER_PHONE}` : ''} and we can talk numbers.
+
+Cheers,
+${SENDER_NAME}
+${BUSINESS_NAME}${licence}
+
+---
+You're receiving this because your vehicle was advertised for sale. Reply "unsubscribe" and we won't contact you again.`,
+      },
+      draftedAt: new Date().toISOString(),
+      ai: true,
+    };
+  } catch (err) {
+    console.error('AI intro failed, using template:', err.message);
+    return base;
+  }
+}
+
+export function introTemplate(lead) {
+  return TWILIO_WA_INTRO_CONTENT_SID ? { sid: TWILIO_WA_INTRO_CONTENT_SID, vars: { 1: firstName(lead.seller.name), 2: carName(lead.vehicle), 3: BUSINESS_NAME } } : null;
+}
+
+// One polite nudge when the seller hasn't replied
+export function followUpMessages(lead) {
+  const car = carName(lead.vehicle), name = firstName(lead.seller.name);
+  return {
+    sms: `Hi ${name}, just following up on your ${car} - we're still keen and can move quickly (fast payment, paperwork and pickup handled). Happy to chat? - ${SENDER_NAME}, ${BUSINESS_NAME}. Reply STOP to opt out`,
+    email: {
+      subject: `Re: ${lead.drafts?.email?.subject || `Your ${car}`}`,
+      body: `Hi ${name},
+
+Just following up on your ${car}. We're still keen to buy it and can move quickly: fast payment, and we take care of the paperwork, any finance payout and pickup.
+
+Happy to have a quick chat whenever suits.
+
+Cheers,
+${SENDER_NAME}
+${BUSINESS_NAME}${licence}
+
+---
+Reply "unsubscribe" and we won't contact you again.`,
+    },
+    template: TWILIO_WA_FOLLOWUP_CONTENT_SID ? { sid: TWILIO_WA_FOLLOWUP_CONTENT_SID, vars: { 1: name, 2: car, 3: BUSINESS_NAME } } : null,
+  };
 }

@@ -39,6 +39,18 @@ Webhooks to configure:
 Storage: Supabase `leads` / `suppressions` tables (schema at the top of `store.mjs`) if `SUPABASE_URL` is set, otherwise `data/leads.json`.
 On Railway/Render the local disk is wiped on redeploy, so use Supabase or a persistent volume in production.
 
+### Starting outreach from a contact you've got
+
+Most Marketplace sellers only give a number or email once you message them. Open the car, type their **mobile, WhatsApp and/or email** into the Seller section and press **Start outreach**:
+- The AI writes an intro about that specific car. Your business name, licence and opt-out are added by code, never left to the AI, and prices are never mentioned.
+- It sends on every channel you entered and moves the car to step 3 (Intro sent).
+- If there's no reply after `FOLLOWUP_HOURS` (default 48), one follow-up goes out, between 9am and 7pm Monday to Saturday.
+- Replies by SMS, email or WhatsApp land on that car, cancel the follow-up and move it to Negotiating. STOP opts them out.
+
+Adding a contact later only sends on the new channel, and a channel that failed is retried.
+
+WhatsApp needs a registered WhatsApp sender in Twilio (not the sandbox) plus two approved templates. See `.env.example`.
+
 ### Dealer portal
 
 Dealers sign up at `/dealer` (business name, dealer licence, ABN, contact details). Accounts start **pending**: approve them from the **Dealers** button in `/admin` after checking their licence.

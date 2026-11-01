@@ -348,7 +348,8 @@ let dealerInfo = { dealers: [], canEmail: false, canSms: false }, salePoll;
 let stepFilter = null;
 let tab = 'approve', sort = 'deal', query = '', leads = [], meta = null, current = null, view = 'grid', gi = 0, contactOnly = false;
 try { view = localStorage.getItem('c2t_view') || 'grid'; contactOnly = localStorage.getItem('c2t_contact') === '1'; } catch {}
-const hasContact = l => !!(l.seller.phone || l.seller.email);
+const hasContact = l => !!(l.seller.phone || l.seller.email || l.seller.whatsapp);
+const CH_LABEL = { sms: 'Text', email: 'Email', whatsapp: 'WhatsApp', manual: 'Marketplace' };
 // Small "Phone" / "Email" / "Marketplace" tags so you can see how each seller can be reached
 // How long a car has sat at its current step, and when that's too long
 const STUCK_DAYS = { draft: 2, contacted: 3, negotiating: 4, agreed: 2, agreement_sent: 2, inspection: 3, documents: 3, dms_loaded: 2, selling: 3, seller_paid: 2, in_stock: 3, invoiced: 3, transport: 3, payment_received: 2, needs_valuation: 3 };
@@ -371,7 +372,7 @@ const saleLine = l => {
   if (s.status === 'open') return `Bidding open · ${s.bids.length} bid${s.bids.length === 1 ? '' : 's'}${top ? ' · top ' + money(top.amount) : ''}`;
   return '';
 };
-const contactTags = l => `<span class="ct">${l.seller.phone ? '<i>Phone</i>' : ''}${l.seller.email ? '<i>Email</i>' : ''}${!hasContact(l) ? '<i class="m">Marketplace only</i>' : ''}</span>`;
+const contactTags = l => `<span class="ct">${l.seller.whatsapp ? '<i>WhatsApp</i>' : ''}${l.seller.phone ? '<i>Phone</i>' : ''}${l.seller.email ? '<i>Email</i>' : ''}${!hasContact(l) ? '<i class="m">Marketplace only</i>' : ''}</span>`;
 let token = '';
 try { token = localStorage.getItem('c2t_admin') || ''; } catch {}
 
@@ -660,6 +661,8 @@ function draw() {
     </div>`);
   }
 
+  h.push(sellerSection(l));
+
   // Needs a price
   if (l.stage === 'needs_valuation' || (off && l.stage === 'rejected')) {
     h.push(`<div class="group-t">Set market value</div><div class="group"><label class="row"><span class="l">Market value</span><input id="mv" type="number" inputmode="numeric" placeholder="$0"></label></div>
@@ -680,20 +683,13 @@ function draw() {
 
   // Conversation
   if ((l.thread || []).length || ['contacted', 'negotiating'].includes(l.stage)) {
-    h.push(`<div class="group-t">Messages</div><div class="thread">${(l.thread || []).map(m => `<div class="bub ${m.dir}">${esc(m.body)}</div><div class="meta ${m.dir}">${esc({ sms: 'Text', email: 'Email', manual: 'Marketplace' }[m.channel] || m.channel)} · ${ago(m.at)}</div>`).join('') || '<p style="color:var(--text-2);text-align:center;padding:12px">Waiting for the seller to reply.</p>'}</div>
+    h.push(`<div class="group-t">Messages</div><div class="thread">${(l.thread || []).map(m => `<div class="bub ${m.dir}">${esc(m.body)}</div><div class="meta ${m.dir}">${esc(CH_LABEL[m.channel] || m.channel)} · ${ago(m.at)}</div>`).join('') || '<p style="color:var(--text-2);text-align:center;padding:12px">Waiting for the seller to reply.</p>'}</div>
       ${l.stage !== 'opted_out' ? `<div class="composer"><textarea id="reply" rows="1" placeholder="Message" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
         <button class="send" onclick="sendReply()" aria-label="Send"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12V2M2.5 6.5 7 2l4.5 4.5"/></svg></button></div>
-        <div class="ch-pick"><div class="seg" id="rch">${[canSms && 'sms', canEmail && 'email', 'manual'].filter(Boolean).map((c, i) => `<button class="${i === 0 ? 'on' : ''}" data-ch="${c}" onclick="pickCh(this)">${{ sms: 'Text', email: 'Email', manual: 'Marketplace' }[c]}</button>`).join('')}</div>
+        <div class="ch-pick"><div class="seg" id="rch">${[l.seller.whatsapp && 'whatsapp', canSms && 'sms', canEmail && 'email', 'manual'].filter(Boolean).map((c, i) => `<button class="${i === 0 ? 'on' : ''}" data-ch="${c}" onclick="pickCh(this)">${CH_LABEL[c]}</button>`).join('')}</div>
         <button class="btn sec sm" onclick="suggest()">✦ Suggest reply</button></div>` : ''}`);
   }
 
-  // Seller
-  h.push(`<div class="group-t">Seller</div><div class="group">
-    ${row('Name', esc(l.seller.name))}
-    ${row('Mobile', l.seller.phone ? `<a href="tel:${esc(l.seller.phone)}">${esc(l.seller.phone)}</a>` : '—')}
-    ${row('Email', l.seller.email ? `<a href="mailto:${esc(l.seller.email)}">${esc(l.seller.email)}</a>` : '—')}
-    ${l.seller.profileUrl || l.url ? row('Marketplace', `<a href="${esc(l.seller.profileUrl || l.url)}" target="_blank" rel="noopener">${l.seller.profileUrl ? 'View profile' : 'Message on listing'}</a>`) : ''}
-  </div>`);
 
   // Vehicle
   h.push(`<div class="group-t">Vehicle</div><div class="group">
@@ -762,6 +758,7 @@ function draw() {
   $('sheet').innerHTML = h.join('');
   $('sheet').querySelector('.sh-body').scrollTop = scroll;
   smsLen();
+  startLabel();
 }
 
 // ── photos: gallery in the sheet + full-screen viewer ──
@@ -942,6 +939,68 @@ async function setDealer(id, status) {
   toast(status === 'approved' ? 'Approved ✓' : 'Updated'); openDealers(); load();
 }
 
+// ── seller contact + "Start outreach" ──
+function sellerSection(l) {
+  const s = l.seller, off = ['opted_out', 'lost'].includes(l.stage) || l.optedOut;
+  const f = l.followUp, ch = meta.channels || {};
+  const input = (id, label, val, type, ph) => `<label class="row"><span class="l">${label}</span><input id="${id}" type="${type}" value="${esc(val || '')}" placeholder="${ph}" oninput="startLabel()" ${off ? 'disabled' : ''}></label>`;
+  const followNote = f?.due ? `Follow-up goes out ${new Date(f.due).toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })} if they haven’t replied (business hours only).`
+    : f?.sent ? 'Follow-up sent.' : '';
+  const missing = [!ch.whatsapp && 'WhatsApp', !ch.sms && 'SMS', !ch.email && 'email'].filter(Boolean);
+  return `<div class="group-t">Seller</div><div class="group">
+    ${row('Name', esc(s.name))}
+    ${input('sl_ph', 'Mobile', s.phone, 'tel', 'Add mobile')}
+    <label class="row"><span class="l">WhatsApp ${off || !s.phone && !$('sl_ph')?.value ? '' : `<button class="link" style="font-size:12px;margin-left:6px" onclick="event.preventDefault();$('sl_wa').value=$('sl_ph').value;startLabel()">same as mobile</button>`}</span><input id="sl_wa" type="tel" value="${esc(s.whatsapp || '')}" placeholder="Add WhatsApp" oninput="startLabel()" ${off ? 'disabled' : ''}></label>
+    ${input('sl_em', 'Email', s.email, 'email', 'Add email')}
+    ${s.profileUrl || l.url ? row('Marketplace', `<a href="${esc(s.profileUrl || l.url)}" target="_blank" rel="noopener">${s.profileUrl ? 'View profile' : 'Message on listing'}</a>`) : ''}
+  </div>
+  ${off ? '<div class="group-f" style="color:var(--red)">This seller opted out — they can’t be contacted again.</div>' : `
+  <div class="actions"><button class="btn wide" id="startBtn" onclick="startOutreach()">Start outreach</button></div>
+  <div class="group-f" id="startHint"></div>
+  ${followNote ? `<div class="group-f">⏱ ${esc(followNote)}</div>` : ''}
+  ${missing.length ? `<div class="group-f">${missing.join(', ')} not set up yet on the server, so ${missing.length > 1 ? 'those channels' : 'that channel'} can’t send.</div>` : ''}`}`;
+}
+// Which channels a press of "Start outreach" would use right now
+function startChannels() {
+  const sent = new Set((current.thread || []).filter(m => m.dir === 'out').map(m => m.channel));
+  return [$('sl_wa')?.value.trim() && 'whatsapp', $('sl_ph')?.value.trim() && 'sms', $('sl_em')?.value.trim() && 'email'].filter(Boolean).filter(c => !sent.has(c));
+}
+function startLabel() {
+  const b = $('startBtn'), h = $('startHint'); if (!b) return;
+  const chs = startChannels();
+  const changed = ['sl_ph', 'sl_wa', 'sl_em'].some(id => ($(id)?.value.trim() || '') !== (current.seller[{ sl_ph: 'phone', sl_wa: 'whatsapp', sl_em: 'email' }[id]] || ''));
+  if (chs.length) {
+    b.textContent = 'Start outreach · ' + chs.map(c => CH_LABEL[c]).join(' + ');
+    h.textContent = 'The AI writes a personalised intro for this car (your business name, licence and opt-out are always included), sends it, and follows up once if there’s no reply.';
+  } else if (changed) {
+    b.textContent = 'Save contact details'; h.textContent = '';
+  } else if (!['sl_ph', 'sl_wa', 'sl_em'].some(id => $(id)?.value.trim())) {
+    b.textContent = 'Add a mobile, WhatsApp or email';
+    h.textContent = 'Got their details from a Marketplace chat? Enter them here and the AI sends the intro.';
+  } else {
+    b.textContent = 'Intro already sent on every channel';
+    h.textContent = 'Add another mobile, WhatsApp or email to reach them there too.';
+  }
+  b.disabled = !chs.length && !changed;
+}
+async function startOutreach() {
+  const body = { phone: $('sl_ph').value.trim(), whatsapp: $('sl_wa').value.trim(), email: $('sl_em').value.trim() };
+  const chs = startChannels();
+  if (!chs.length) {
+    current = await api('/api/leads/' + current.id, { method: 'PATCH', body: { seller: { phone: body.phone || null, whatsapp: body.whatsapp || null, email: body.email || null } } });
+    toast('Saved ✓'); draw(); load(); return;
+  }
+  if (!await dialog({ title: `Message ${current.seller.name ? current.seller.name.split(' ')[0] : 'the seller'} now?`, text: `An intro goes out by ${chs.map(c => CH_LABEL[c]).join(' and ')} straight away. Only use details the seller gave you or put in their ad.`, ok: 'Send intro' })) return;
+  $('startBtn').disabled = true; $('startBtn').textContent = 'Writing & sending…';
+  try {
+    const r = await api(`/api/leads/${current.id}/start`, { method: 'POST', body });
+    current = r.lead;
+    const parts = Object.entries(r.results).map(([k, v]) => v === 'sent' ? `${CH_LABEL[k]} ✓` : `${CH_LABEL[k]}: ${v}`);
+    toast(parts.join(' · '));
+  } catch { try { current = await api('/api/leads/' + current.id); } catch {} }
+  draw(); load();
+}
+
 function smsLen() { const s = $('sms'), o = $('smslen'); if (s && o) o.textContent = `${s.value.length} · ${Math.ceil(s.value.length / 153) || 1} SMS`; }
 function pickCh(b) { b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }
 const channel = () => $('rch')?.querySelector('.on')?.dataset.ch || 'sms';
@@ -954,7 +1013,7 @@ async function saveDrafts() { current = await api('/api/leads/' + current.id, { 
 async function approve() {
   const l = current, canSms = !!l.seller.phone, canEmail = !!l.seller.email;
   await api('/api/leads/' + l.id, { method: 'PATCH', body: { drafts: collectDrafts() } });
-  let channels = [canSms && 'sms', canEmail && 'email'].filter(Boolean);
+  let channels = [l.seller.whatsapp && 'whatsapp', canSms && 'sms', canEmail && 'email'].filter(Boolean);
   if (!channels.length) {
     try { await navigator.clipboard.writeText($('sms').value); } catch {}
     if (l.seller.profileUrl || l.url) window.open(l.seller.profileUrl || l.url, '_blank', 'noopener');
