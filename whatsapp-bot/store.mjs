@@ -94,7 +94,7 @@ export async function findLeadByContact(contact) {
   const leads = await listLeads();
   // Most recently updated lead wins if a seller has several listings
   return leads
-    .filter(l => l.seller?.phone === contact || l.seller?.email === contact)
+    .filter(l => l.seller?.phone === contact || l.seller?.email === contact || l.seller?.whatsapp === contact)
     .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''))[0] || null;
 }
 

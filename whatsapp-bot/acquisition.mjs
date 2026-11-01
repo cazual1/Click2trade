@@ -4,19 +4,60 @@
 //   POST /api/listings/ingest     (INGEST_API_KEY)  scraping agent drops the day's listings
 //   GET  /api/leads               (ADMIN_TOKEN)     dashboard data
 //   ...                                             see routes below
+//   POST /api/leads/:id/start     (ADMIN_TOKEN)     you enter a seller's mobile/WhatsApp/email → intro goes out
 //   POST /sms-inbound                               Twilio SMS webhook (seller replies)
 //   /admin                                          approval + pipeline dashboard
 
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normaliseListing, checkCriteria, CRITERIA } from './listings.mjs';
+import { normaliseListing, checkCriteria, CRITERIA, normalisePhone, normaliseEmail } from './listings.mjs';
 import { valueListing, discountFor } from './valuation.mjs';
 import { STAGES, documentChecklist, alerts, checkStageMove, moveStage } from './pipeline.mjs';
-import { draftMessages, sendToSeller, recordReply, suggestReply, isOptOut } from './seller-outreach.mjs';
-import { getLead, listLeads, saveLead, findLeadByContact } from './store.mjs';
+import { draftMessages, sendToSeller, recordReply, suggestReply, isOptOut, aiIntro, introTemplate, followUpMessages, channelsAvailable } from './seller-outreach.mjs';
+import { getLead, listLeads, saveLead, findLeadByContact, isSuppressed } from './store.mjs';
 
-const { INGEST_API_KEY, ADMIN_TOKEN } = process.env;
+const { INGEST_API_KEY, ADMIN_TOKEN, DISPLAY_TZ = 'Australia/Sydney' } = process.env;
+const FOLLOWUP_HOURS = Number(process.env.FOLLOWUP_HOURS || 48);
+const MAX_FOLLOWUPS = Number(process.env.MAX_FOLLOWUPS ?? 1);
+
+// Only nudge sellers at a reasonable time: 9am–7pm, Monday to Saturday, local time
+function businessHours(now = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-AU', { timeZone: DISPLAY_TZ, hour: 'numeric', hourCycle: 'h23', weekday: 'short' })
+    .formatToParts(now).map(p => [p.type, p.value]));
+  const h = Number(parts.hour);
+  return parts.weekday !== 'Sun' && h >= 9 && h < 19;
+}
+
+function scheduleFollowUp(lead, channels) {
+  lead.followUp = MAX_FOLLOWUPS > 0 && channels.length ? { due: new Date(Date.now() + FOLLOWUP_HOURS * 3600000).toISOString(), channels, sent: 0 } : null;
+}
+
+// Send the follow-up to sellers who went quiet after the intro
+async function sweepFollowUps() {
+  if (!businessHours()) return;
+  const now = Date.now();
+  for (const lead of await listLeads()) {
+    const f = lead.followUp;
+    if (lead.stage !== 'contacted' || !f?.due || new Date(f.due).getTime() > now || f.sent >= MAX_FOLLOWUPS) continue;
+    const msg = followUpMessages(lead);
+    const sent = [];
+    for (const ch of f.channels) {
+      try {
+        if (ch === 'email') await sendToSeller(lead, 'email', { subject: msg.email.subject, body: msg.email.body });
+        else await sendToSeller(lead, ch, { body: msg.sms, template: ch === 'whatsapp' ? msg.template : null });
+        sent.push(ch);
+      } catch (err) {
+        console.error(`Follow-up ${ch} failed for ${lead.id}:`, err.message);
+      }
+    }
+    f.sent++;
+    f.due = f.sent < MAX_FOLLOWUPS ? new Date(now + 3 * 86400000).toISOString() : null;
+    lead.history = lead.history || [];
+    if (sent.length) lead.history.push({ at: new Date().toISOString(), from: lead.stage, to: lead.stage, note: `Follow-up sent via ${sent.join(', ')}` });
+    await saveLead(lead);
+  }
+}
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 // Stages where a fresh price from the feed should re-run qualification
@@ -91,7 +132,55 @@ export function createAcquisitionRouter() {
   // ── DASHBOARD API ──
   const admin = requireToken(ADMIN_TOKEN, 'ADMIN_TOKEN');
 
-  router.get('/api/meta', admin, (req, res) => res.json({ stages: STAGES, criteria: CRITERIA }));
+  router.get('/api/meta', admin, (req, res) => res.json({ stages: STAGES, criteria: CRITERIA, channels: channelsAvailable(), followUpHours: FOLLOWUP_HOURS }));
+
+  // You've got the seller's mobile, WhatsApp or email (e.g. from a Marketplace chat): save it and send the intro.
+  // Only channels that haven't had an intro yet are used, so re-running this after adding an email won't double-text them.
+  router.post('/api/leads/:id/start', admin, async (req, res) => {
+    const lead = await getLead(req.params.id);
+    if (!lead) return res.status(404).json({ error: 'Not found' });
+    if (lead.stage === 'opted_out' || lead.optedOut) return res.status(409).json({ error: 'This seller has opted out' });
+
+    const b = req.body || {};
+    const phone = b.phone ? normalisePhone(b.phone) : lead.seller.phone;
+    const whatsapp = b.whatsapp ? normalisePhone(b.whatsapp) : lead.seller.whatsapp;
+    const email = b.email ? normaliseEmail(b.email) : lead.seller.email;
+    if (b.phone && !phone) return res.status(400).json({ error: 'That mobile number doesn’t look right' });
+    if (b.whatsapp && !whatsapp) return res.status(400).json({ error: 'That WhatsApp number doesn’t look right — include the country code if it isn’t Australian' });
+    if (b.email && !email) return res.status(400).json({ error: 'That email address doesn’t look right' });
+    lead.seller = { ...lead.seller, phone: phone || null, whatsapp: whatsapp || null, email: email || null };
+
+    const avail = channelsAvailable();
+    const already = new Set((lead.thread || []).filter(m => m.dir === 'out').map(m => m.channel));
+    const want = [whatsapp && 'whatsapp', phone && 'sms', email && 'email'].filter(Boolean).filter(ch => !already.has(ch));
+    if (!want.length) {
+      await saveLead(lead);
+      return res.status(409).json({ error: phone || whatsapp || email ? 'An intro has already gone out on those channels' : 'Enter a mobile, WhatsApp number or email', lead: view(lead) });
+    }
+
+    if (!lead.drafts?.ai) lead.drafts = await aiIntro(lead);
+    const results = {};
+    for (const ch of want) {
+      if (!avail[ch]) { results[ch] = 'not set up yet'; continue; }
+      try {
+        if (ch === 'email') await sendToSeller(lead, 'email', { subject: lead.drafts.email.subject, body: lead.drafts.email.body });
+        else await sendToSeller(lead, ch, { body: lead.drafts.sms, template: ch === 'whatsapp' ? introTemplate(lead) : null });
+        results[ch] = 'sent';
+      } catch (err) {
+        results[ch] = err.message;
+      }
+    }
+
+    const sent = Object.keys(results).filter(k => results[k] === 'sent');
+    if (sent.length) {
+      lead.approvedAt = lead.approvedAt || new Date().toISOString();
+      if (['new', 'needs_valuation', 'draft', 'rejected'].includes(lead.stage)) moveStage(lead, 'contacted', `Outreach started via ${sent.join(', ')}`);
+      else (lead.history = lead.history || []).push({ at: new Date().toISOString(), from: lead.stage, to: lead.stage, note: `Intro sent via ${sent.join(', ')}` });
+      if (lead.stage === 'contacted') scheduleFollowUp(lead, [...new Set([...(lead.followUp?.channels || []), ...sent])]);
+    }
+    await saveLead(lead);
+    res.json({ results, lead: view(lead) });
+  });
 
   router.get('/api/leads', admin, async (req, res) => {
     let leads = await listLeads();
@@ -139,6 +228,7 @@ export function createAcquisitionRouter() {
         if (ch === 'sms') await sendToSeller(lead, 'sms', { body: lead.drafts.sms });
         else if (ch === 'email') await sendToSeller(lead, 'email', { subject: lead.drafts.email.subject, body: lead.drafts.email.body });
         else if (ch === 'manual') await sendToSeller(lead, 'manual', { body: lead.drafts.sms });
+        else if (ch === 'whatsapp') await sendToSeller(lead, 'whatsapp', { body: lead.drafts.sms, template: introTemplate(lead) });
         results[ch] = 'sent';
       } catch (err) {
         results[ch] = err.message;
@@ -147,7 +237,9 @@ export function createAcquisitionRouter() {
 
     if (Object.values(results).includes('sent')) {
       lead.approvedAt = new Date().toISOString();
-      moveStage(lead, 'contacted', `Intro sent via ${Object.keys(results).filter(k => results[k] === 'sent').join(', ')}`);
+      const sentCh = Object.keys(results).filter(k => results[k] === 'sent');
+      moveStage(lead, 'contacted', `Intro sent via ${sentCh.join(', ')}`);
+      scheduleFollowUp(lead, sentCh.filter(c => c !== 'manual'));
     }
     await saveLead(lead);
     res.json({ results, lead: view(lead) });
@@ -215,14 +307,28 @@ export function createAcquisitionRouter() {
 
   router.get('/admin', (req, res) => res.sendFile(path.join(here, 'admin.html')));
 
+  setInterval(() => sweepFollowUps().catch(err => console.error('Follow-up sweep failed:', err)), 10 * 60000).unref();
+
   return router;
 }
 
 async function handleReply(lead, channel, body, from) {
   await recordReply(lead, channel, body, from);
+  lead.followUp = null; // they replied — no nudge needed
   if (isOptOut(body)) moveStage(lead, 'opted_out', `Opt-out via ${channel}`);
   else if (lead.stage === 'contacted') moveStage(lead, 'negotiating', `Seller replied via ${channel}`);
   await saveLead(lead);
+}
+
+// WhatsApp messages share one webhook with the seller-facing bot. If the sender is a seller we contacted
+// about a listing, the reply belongs on that car. Returns true if handled.
+export async function handleSellerWhatsApp(from, body) {
+  const num = String(from || '').replace(/^whatsapp:/, '');
+  if (!num || !body) return false;
+  const lead = await findLeadByContact(num);
+  if (!lead || lead.seller?.whatsapp !== num) return false;
+  await handleReply(lead, 'whatsapp', body, num);
+  return true;
 }
 
 // Seller email replies arrive at lead-{id}@INBOUND_DOMAIN. Returns true if handled.
@@ -301,3 +407,5 @@ export async function ingest(items, source) {
 function pick(seller = {}) {
   return Object.fromEntries(Object.entries(seller).filter(([, v]) => v));
 }
+
+export { sweepFollowUps, businessHours };
